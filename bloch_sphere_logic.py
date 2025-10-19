@@ -116,19 +116,42 @@ def create_initial_figure():
     )
     return fig
 
+# bloch_sphere_logic.py
+
+# ... (keep all the other functions as they are) ...
+
 def update_figure_state(fig, theta_deg, phi_deg):
-    """Updates the figure's arrow based on the new qubit state."""
+    """Updates the figure's arrow by replacing the traces completely."""
     theta_rad = np.deg2rad(theta_deg)
     phi_rad = np.deg2rad(phi_deg)
     x, y, z = get_bloch_vector_coordinates(theta_rad, phi_rad)
 
-    # Create a new figure data object to avoid mutation issues with Dash
+    # Create a new figure object to avoid mutating the original
     new_fig = go.Figure(fig)
 
-    # CORRECTED INDICES: Use 19 for the arrow line and 20 for the arrowhead cone
-    new_fig.data[19].x, new_fig.data[19].y, new_fig.data[19].z = [0, x], [0, y], [0, z]
-    new_fig.data[20].x, new_fig.data[20].y, new_fig.data[20].z = [x], [y], [z]
-    new_fig.data[20].u, new_fig.data[20].v, new_fig.data[20].w = [x], [y], [z]
+    # Re-create the arrow line trace completely
+    new_arrow_line = go.Scatter3d(
+        x=[0, x], y=[0, y], z=[0, z],
+        mode='lines',
+        line=dict(color="#ff3b30", width=8),
+        name='arrow'
+    )
+
+    # Re-create the arrowhead cone trace completely
+    new_arrowhead = go.Cone(
+        x=[x], y=[y], z=[z],
+        u=[x], v=[y], w=[z],
+        sizemode="absolute",
+        sizeref=0.15,
+        anchor="tip",
+        colorscale=[[0, "#ff3b30"], [1, "#ff3b30"]],
+        showscale=False,
+        name='arrowhead'
+    )
+
+    # Replace the old traces with the new ones at the correct indices
+    new_fig.data[19] = new_arrow_line
+    new_fig.data[20] = new_arrowhead
 
     return new_fig
 
