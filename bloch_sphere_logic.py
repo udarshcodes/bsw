@@ -121,12 +121,11 @@ def create_initial_figure():
 # ... (keep all the other functions as they are) ...
 
 def update_figure_state(fig, theta_deg, phi_deg):
-    """Updates the figure's arrow by replacing the traces completely."""
+    """Updates the figure's arrow by replacing the traces in a mutable list."""
     theta_rad = np.deg2rad(theta_deg)
     phi_rad = np.deg2rad(phi_deg)
-    x, y, z = get_bloch_vector_coordinates(theta_rad, phi_rad)
+    x, y, z = get_bloch_vector_coordinates(theta_rad, phi_deg)
 
-    # Create a new figure object to avoid mutating the original
     new_fig = go.Figure(fig)
 
     # Re-create the arrow line trace completely
@@ -149,9 +148,17 @@ def update_figure_state(fig, theta_deg, phi_deg):
         name='arrowhead'
     )
 
-    # Replace the old traces with the new ones at the correct indices
-    new_fig.data[19] = new_arrow_line
-    new_fig.data[20] = new_arrowhead
+    # --- THE CRITICAL FIX ---
+    # Convert the immutable tuple of traces to a mutable list
+    data_list = list(new_fig.data)
+
+    # Replace the old traces with the new ones in the list
+    data_list[19] = new_arrow_line
+    data_list[20] = new_arrowhead
+
+    # Assign the modified list back to the figure's data property
+    new_fig.data = data_list
+    # --- END FIX ---
 
     return new_fig
 
