@@ -121,11 +121,14 @@ def update_figure_state(fig, theta_deg, phi_deg):
     theta_rad = np.deg2rad(theta_deg)
     phi_rad = np.deg2rad(phi_deg)
     x, y, z = get_bloch_vector_coordinates(theta_rad, phi_rad)
-    
+
     # Create a new figure data object to avoid mutation issues with Dash
     new_fig = go.Figure(fig)
-    new_fig.data[12].x, new_fig.data[12].y, new_fig.data[12].z = [0,x],[0,y],[0,z]
-    new_fig.data[13].x, new_fig.data[13].y, new_fig.data[13].z = [x],[y],[z]
-    new_fig.data[13].u, new_fig.data[13].v, new_fig.data[13].w = [x],[y],[z]
-    
+
+    # CORRECTED INDICES: Use 19 for the arrow line and 20 for the arrowhead cone
+    new_fig.data[19].x, new_fig.data[19].y, new_fig.data[19].z = [0, x], [0, y], [0, z]
+    new_fig.data[20].x, new_fig.data[20].y, new_fig.data[20].z = [x], [y], [z]
+    new_fig.data[20].u, new_fig.data[20].v, new_fig.data[20].w = [x], [y], [z]
+
     return new_fig
+
