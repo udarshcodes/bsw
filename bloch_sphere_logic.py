@@ -106,6 +106,16 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
             "Please set the `GEMINI_API_KEY` secret file in the deployment environment to enable this feature."
         )
 
+    # --- NEW VALIDATION STEP ---
+    # A valid Gemini API key is a long string that starts with "AIza"
+    if not api_key.startswith("AIza"):
+        return (
+            "**Invalid API Key Format**\n\n"
+            "The API key configured on the server does not appear to be in the correct format. A valid Gemini API key typically starts with `AIza`. "
+            "Please generate a new key from Google AI Studio and ensure it is correctly placed in the `GEMINI_API_KEY` secret file on Render."
+        )
+    # --- END NEW STEP ---
+
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
 
     system_prompt = (
