@@ -22,12 +22,16 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
             html.Label(html.B("Theta (θ) degrees")),
             dcc.Slider(id='theta-slider', min=0, max=180, step=1, value=0, marks={i: str(i) for i in range(0, 181, 45)}),
 
-            # --- MODIFICATION START ---
             # Grouped Phi controls for better layout
             html.Div([
                 html.Label(html.B("Phi (φ) degrees"), style={'marginTop': '20px', 'display': 'block'}),
                 html.Div(style={'display': 'flex', 'alignItems': 'center', 'gap': '15px'}, children=[
-                    dcc.Slider(id='phi-slider', min=0, max=360, step=1, value=0, marks={i: str(i) for i in range(0, 361, 90)}, style={'flex': '1'}),
+                    # --- FIX START ---
+                    # Wrap the Slider in a Div to apply styling, as dcc.Slider does not accept a 'style' prop.
+                    html.Div(style={'flex': '1'}, children=[
+                        dcc.Slider(id='phi-slider', min=0, max=360, step=1, value=0, marks={i: str(i) for i in range(0, 361, 90)})
+                    ]),
+                    # --- FIX END ---
                     # New numeric input for Phi
                     dcc.Input(
                         id='phi-input',
@@ -41,7 +45,6 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
                     )
                 ])
             ]),
-            # --- MODIFICATION END ---
 
             html.H3("Quantum Gates", style={'marginTop': '30px'}),
             html.Div(style={'display': 'grid', 'gridTemplateColumns': 'repeat(3, 1fr)', 'gap': '10px'}, children=[
@@ -61,7 +64,7 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
     ])
 ])
 
-# --- MODIFICATION START: Updated Callback with new Input/Output ---
+# Updated Callback with new Input/Output
 @app.callback(
     Output('bloch-sphere-graph', 'figure'),
     Output('state-vector-readout', 'children'),
@@ -127,7 +130,6 @@ def update_sphere_and_readouts(
     # Return the new state to all relevant outputs to keep them in sync
     return updated_figure, state_str, prob_html, new_theta, new_phi, new_phi
 
-# --- MODIFICATION END ---
-
 if __name__ == '__main__':
     app.run(debug=True)
+
