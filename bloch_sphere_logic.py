@@ -142,10 +142,14 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
         return explanation
 
     except requests.exceptions.RequestException as e:
-        print(f"API Request Error: {e}")
+        # Provide a more detailed error for easier debugging
+        detailed_error = f"API Request Error: {e}"
+        print(detailed_error)
         return (
             "**Error: Could not connect to the AI service.**\n\n"
-            "This might be due to a network issue on the server. Please try again in a moment."
+            "This is often due to network restrictions on the free hosting plan that may block outbound API calls. "
+            "Please also double-check that your Gemini API key is correctly configured as a secret file in your Render dashboard.\n\n"
+            f"*Details: {e}*"
         )
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
