@@ -1,5 +1,3 @@
-# bloch_sphere_logic.py
-
 import numpy as np
 import plotly.graph_objects as go
 from qiskit import QuantumCircuit
@@ -8,14 +6,12 @@ import requests
 import json
 import os
 
-# ------------------- Constants & Styling -------------------
 BACKGROUND_COLOR = "#111111"
 TEXT_COLOR = "#ffffff"
 GRID_COLOR = "#444444"
 FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 INITIAL_CAMERA = dict(eye=dict(x=1.5, y=1.5, z=1))
 
-# ------------------- Core Quantum & Coordinate Functions -------------------
 def get_bloch_vector_coordinates(theta_rad, phi_rad):
     x = np.sin(theta_rad) * np.cos(phi_rad)
     y = np.sin(theta_rad) * np.sin(phi_rad)
@@ -49,7 +45,6 @@ def apply_gate_to_state(theta_deg, phi_deg, gate_name):
     new_phi_rad = np.arctan2(y, x)
     return np.rad2deg(new_theta_rad), np.rad2deg(new_phi_rad % (2 * np.pi))
 
-# ------------------- Figure Creation Function -------------------
 def create_figure_for_state(theta_deg, phi_deg):
     """Creates a complete Plotly figure for a given qubit state."""
     fig = go.Figure()
@@ -88,12 +83,11 @@ def create_figure_for_state(theta_deg, phi_deg):
     )
     return fig
 
-# --- AI EXPLANATION FUNCTION (This was missing) ---
 def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
     """Generates an AI explanation for the current qubit state using the Gemini API."""
     
     api_key = ""
-    # In Render, we securely read the key from a Secret File.
+
     secret_path = '/etc/secrets/GEMINI_API_KEY'
     if os.path.exists(secret_path):
         with open(secret_path, 'r') as f:
@@ -106,15 +100,14 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
             "Please set the `GEMINI_API_KEY` secret file in the deployment environment to enable this feature."
         )
 
-    # --- NEW VALIDATION STEP ---
-    # A valid Gemini API key is a long string that starts with "AIza"
+
     if not api_key.startswith("AIza"):
         return (
             "**Invalid API Key Format**\n\n"
             "The API key configured on the server does not appear to be in the correct format. A valid Gemini API key typically starts with `AIza`. "
             "Please generate a new key from Google AI Studio and ensure it is correctly placed in the `GEMINI_API_KEY` secret file on Render."
         )
-    # --- END NEW STEP ---
+    
 
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
 
