@@ -1,19 +1,13 @@
-# app.py
-
 import dash
 from dash import dcc, html, Input, Output, State, callback_context, no_update
 import numpy as np
 import random
 
-# Import functions from our logic file
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
-# Initialize the Dash app (which uses Flask as its server)
 app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
-server = app.server  # Expose the Flask server for deployment
+server = app.server
 
-# --- NEW: Add MathJax configuration script ---
-# This script will find and render LaTeX formulas in the AI explanation.
 app.scripts.config.serve_locally = True
 app.scripts.append_script({
     "external_url": [
@@ -22,7 +16,6 @@ app.scripts.append_script({
 })
 
 
-# --- App Layout ---
 app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', 'fontFamily': 'Inter'}, children=[
     html.H1("Interactive Bloch Sphere", style={'textAlign': 'center', 'padding': '20px'}),
     html.Div(style={'display': 'flex', 'flexDirection': 'row', 'justifyContent': 'center', 'gap': '30px'}, children=[
@@ -74,7 +67,6 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
     ])
 ])
 
-# --- Main Callback for Core Logic ---
 @app.callback(
     Output('bloch-sphere-graph', 'figure'),
     Output('state-vector-readout', 'children'),
@@ -130,7 +122,6 @@ def update_sphere_and_readouts(
     
     return updated_figure, state_str, prob_html, new_theta, new_phi, new_phi
 
-# --- New Callback for AI Explanation ---
 @app.callback(
     Output('ai-explanation-output', 'children'),
     Input('ai-explain-button', 'n_clicks'),
@@ -144,13 +135,11 @@ def update_ai_explanation(n_clicks, theta_deg, phi_deg, state_str_children, prob
     ctx = callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
-    # Determine the last user action for context
     if triggered_id == 'ai-explain-button':
         last_action = "User requested an explanation of the current state."
     else:
         last_action = f"User interacted with {triggered_id}"
     
-    # Extract text from the children properties
     state_str = state_str_children if isinstance(state_str_children, str) else "Not available"
     prob_text = ""
     if prob_html_children and isinstance(prob_html_children, list):
@@ -158,7 +147,6 @@ def update_ai_explanation(n_clicks, theta_deg, phi_deg, state_str_children, prob
 
     explanation = get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action)
     
-    # Return the explanation inside a Markdown component so MathJax can render it
     return dcc.Markdown(explanation, dangerously_allow_html=True)
 
 if __name__ == '__main__':
