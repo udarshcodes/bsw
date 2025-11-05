@@ -1,3 +1,4 @@
+# app.py
 
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
@@ -126,9 +127,26 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
                 dcc.Loading(
                     id="loading-spinner",
                     type="default",
-                    children=html.Div(id="ai-explanation-output")
+                    children=html.Div(
+                        id="ai-explanation-output",
+                        # --- FIX 2: Added styles for overflow ---
+                        style={
+                            'maxHeight': '400px', 
+                            'overflowY': 'auto', 
+                            'textAlign': 'left',
+                            'paddingRight': '10px' # Add padding for the scrollbar
+                        }
+                    )
                 ),
-                style={'marginTop': '15px', 'padding': '15px', 'border': '1px solid #333', 'borderRadius': '8px', 'minHeight': '50px', 'backgroundColor': '#2c2c2e'}
+                style={
+                    'marginTop': '15px', 
+                    'padding': '15px', 
+                    'border': '1px solid #333', 
+                    'borderRadius': '8px', 
+                    'minHeight': '50px', 
+                    'backgroundColor': '#2c2c2e',
+                    'overflowWrap': 'break-word' # Ensure long words wrap
+                }
             )
         ])
     ])
@@ -141,7 +159,7 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
     Output('theta-slider', 'value'),
     Output('phi-slider', 'value'),
     Output('phi-input', 'value'),
-    Output('current-state-store', 'data'), # <-- Output to state store
+    Output('current-state-store', 'data'), # <-- NEW: Output to state store
     Input('theta-slider', 'value'),
     Input('phi-slider', 'value'),
     Input('phi-input', 'value'),
@@ -179,7 +197,7 @@ def update_sphere_and_readouts(
         new_theta = np.rad2deg(np.arccos(2 * random.random() - 1))
         new_phi = 360 * random.random()
     
-    # -All Calculations Happen Here ---
+    # --- NEW: All Calculations Happen Here ---
     updated_figure = create_figure_for_state(new_theta, new_phi)
     
     theta_rad, phi_rad = np.deg2rad(new_theta), np.deg2rad(new_phi)
@@ -198,9 +216,7 @@ def update_sphere_and_readouts(
     p_x_minus = 0.5 * (np.abs(alpha - beta)**2)
     
     # Y-Basis Probs: |+i⟩ = 1/sqrt(2)(|0⟩ + i|1⟩), |-i⟩ = 1/sqrt(2)(|0⟩ - i|1⟩)
-    # <+i| = 1/sqrt(2)(<0| - i<1|)  => P = |(alpha - i*beta)|^2 / 2
     p_y_plus = 0.5 * (np.abs(alpha - 1j * beta)**2) 
-    # <-i| = 1/sqrt(2)(<0| + i<1|)  => P = |(alpha + i*beta)|^2 / 2
     p_y_minus = 0.5 * (np.abs(alpha + 1j * beta)**2) 
 
     store_data = {
@@ -216,7 +232,8 @@ def update_sphere_and_readouts(
     return updated_figure, new_theta, new_phi, new_phi, store_data
 
 
-
+# --- NEW: Callback for Displaying Readouts ---
+# This callback just reads from the store and formats the display.
 @app.callback(
     Output('state-vector-readout', 'children'),
     Output('probability-display-area', 'children'),
@@ -224,7 +241,7 @@ def update_sphere_and_readouts(
 )
 def update_readouts(data):
     if not data:
-
+        # Default state on first load
         state_html = "|ψ⟩ = 1.00+0.00j |0⟩ + (0.00+0.00j) |1⟩"
         prob_cards = []
         for basis, states in [
@@ -257,10 +274,10 @@ def update_readouts(data):
         ]
         return state_html, prob_html
 
-
+    # This runs on every update after the first load
     state_html = data['state_str']
     
-
+    # --- AESTHETICS: Build Probability Cards ---
     prob_cards = []
     for basis, states in [
         ('Z-Basis', [('|0⟩', data['prob_z'][0]), ('|1⟩', data['prob_z'][1])]),
@@ -295,7 +312,8 @@ def update_readouts(data):
     return state_html, prob_html
 
 
-
+# --- Updated Callback for AI Explanation ---
+# This callback now reads from the state store, which is much cleaner.
 @app.callback(
     Output('ai-explanation-output', 'children'),
     Input('ai-explain-button', 'n_clicks'),
@@ -312,7 +330,8 @@ def update_ai_explanation(n_clicks, state_data):
 
     explanation = get_ai_explanation(state_data, last_action)
     
-    return dcc.Markdown(explanation, dangerously_allow_html=True, link_target="_blank")
+    # --- FIX 1: Added mathjax=True ---
+    return dcc.Markdown(explanation, dangerously_allow_html=True, link_target="_blank", mathjax=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
