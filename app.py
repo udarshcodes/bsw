@@ -12,13 +12,15 @@ from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get
 app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
 server = app.server  # Expose the Flask server for deployment
 
-# --- Add MathJax configuration script ---
-app.scripts.config.serve_locally = True
-app.scripts.append_script({
-    "external_url": [
-        "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
-    ]
-})
+# --- DELETE THIS BLOCK ---
+# app.scripts.config.serve_locally = True
+# app.scripts.append_script({
+#     "external_url": [
+#         "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+#     ]
+# })
+# --- END DELETE ---
+
 
 # --- AESTHETICS: Common style for all buttons ---
 common_button_style = {
@@ -330,7 +332,7 @@ def update_ai_explanation(n_clicks, state_data):
 
     explanation = get_ai_explanation(state_data, last_action)
     
-    # --- FIX 1: Added mathjax=True ---
+    # This line is now the *only* thing responsible for MathJax.
     return dcc.Markdown(explanation, dangerously_allow_html=True, link_target="_blank", mathjax=True)
 
 if __name__ == '__main__':
