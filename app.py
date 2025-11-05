@@ -16,7 +16,7 @@ server = app.server  # Expose the Flask server for deployment
 app.scripts.config.serve_locally = True
 app.scripts.append_script({
     "external_url": [
-        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
+        "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
     ]
 })
 
