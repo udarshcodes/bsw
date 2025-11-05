@@ -1,3 +1,4 @@
+
 import numpy as np
 import plotly.graph_objects as go
 from qiskit import QuantumCircuit
@@ -6,11 +7,13 @@ import requests
 import json
 import os
 
+
 BACKGROUND_COLOR = "#111111"
 TEXT_COLOR = "#ffffff"
 GRID_COLOR = "#444444"
 FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 INITIAL_CAMERA = dict(eye=dict(x=1.5, y=1.5, z=1))
+
 
 def get_bloch_vector_coordinates(theta_rad, phi_rad):
     x = np.sin(theta_rad) * np.cos(phi_rad)
@@ -44,6 +47,7 @@ def apply_gate_to_state(theta_deg, phi_deg, gate_name):
     new_theta_rad = np.arccos(np.clip(z, -1, 1))
     new_phi_rad = np.arctan2(y, x)
     return np.rad2deg(new_theta_rad), np.rad2deg(new_phi_rad % (2 * np.pi))
+
 
 def create_figure_for_state(theta_deg, phi_deg):
     """Creates a complete Plotly figure for a given qubit state."""
@@ -83,11 +87,10 @@ def create_figure_for_state(theta_deg, phi_deg):
     )
     return fig
 
-def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
+def get_ai_explanation(state_data, last_action):
     """Generates an AI explanation for the current qubit state using the Gemini API."""
     
     api_key = ""
-
     secret_path = '/etc/secrets/GEMINI_API_KEY'
     if os.path.exists(secret_path):
         with open(secret_path, 'r') as f:
@@ -100,7 +103,6 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
             "Please set the `GEMINI_API_KEY` secret file in the deployment environment to enable this feature."
         )
 
-
     if not api_key.startswith("AIza"):
         return (
             "**Invalid API Key Format**\n\n"
@@ -108,23 +110,41 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
             "Please generate a new key from Google AI Studio and ensure it is correctly placed in the `GEMINI_API_KEY` secret file on Render."
         )
     
-
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
 
     system_prompt = (
         "You are a quantum computing expert and an excellent educator. Your role is to explain the state of a qubit on the Bloch Sphere to a student. "
         "Be clear, concise, and use analogies where helpful. Start with a direct explanation of the current state and then connect it to the user's last action. "
-        "Explain the concepts of superposition and probability in the context of the given state. Do not greet the user or use conversational fluff. Get straight to the explanation. "
+        "Explain the concepts of superposition and probability in the context of the given state. "
+        "**Crucially, explain the measurement probabilities in all three bases (Z, X, and Y) and how they relate to the state vector's position.** "
+        "Do not greet the user. Get straight to the explanation. "
         "Structure your response in Markdown, using headings, bold text, and lists to improve readability."
     )
+    
+
+    theta_deg = state_data.get('theta', 0)
+    phi_deg = state_data.get('phi', 0)
+    state_str = state_data.get('state_str', 'N/A')
+    
+
+    prob_z = state_data.get('prob_z', [0, 0])
+    prob_x = state_data.get('prob_x', [0, 0])
+    prob_y = state_data.get('prob_y', [0, 0])
+    
+    prob_z_text = f"P(|0⟩): {prob_z[0]:.1%}, P(|1⟩): {prob_z[1]:.1%}"
+    prob_x_text = f"P(|+⟩): {prob_x[0]:.1%}, P(|−⟩): {prob_x[1]:.1%}"
+    prob_y_text = f"P(|+i⟩): {prob_y[0]:.1%}, P(|−i⟩): {prob_y[1]:.1%}"
 
     user_prompt = (
         f"The user performed the action: **'{last_action}'**.\n\n"
         f"This resulted in the following qubit state:\n"
         f"- **Spherical Coordinates:** Theta (θ) = {theta_deg:.2f} degrees, Phi (φ) = {phi_deg:.2f} degrees.\n"
         f"- **State Vector |ψ⟩:** {state_str}\n"
-        f"- **Measurement Probabilities:** {prob_text}\n\n"
-        "Please provide a detailed, theoretical explanation of this result."
+        f"- **Measurement Probabilities:**\n"
+        f"  - **Z-Basis:** {prob_z_text}\n"
+        f"  - **X-Basis:** {prob_x_text}\n"
+        f"  - **Y-Basis:** {prob_y_text}\n\n"
+        "Please provide a detailed, theoretical explanation of this result, focusing on how the state's position on the sphere determines all three sets of probabilities."
     )
 
     payload = {
@@ -145,7 +165,6 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
         return explanation
 
     except requests.exceptions.RequestException as e:
-        # Provide a more detailed error for easier debugging
         detailed_error = f"API Request Error: {e}"
         print(detailed_error)
         return (
@@ -157,4 +176,3 @@ def get_ai_explanation(theta_deg, phi_deg, state_str, prob_text, last_action):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return "**An unexpected error occurred while generating the explanation.**"
-
