@@ -1,3 +1,4 @@
+# bloch_sphere_logic.py
 
 import numpy as np
 import plotly.graph_objects as go
@@ -7,14 +8,14 @@ import requests
 import json
 import os
 
-
+# ------------------- Constants & Styling -------------------
 BACKGROUND_COLOR = "#111111"
 TEXT_COLOR = "#ffffff"
 GRID_COLOR = "#444444"
 FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 INITIAL_CAMERA = dict(eye=dict(x=1.5, y=1.5, z=1))
 
-
+# ------------------- Core Quantum & Coordinate Functions -------------------
 def get_bloch_vector_coordinates(theta_rad, phi_rad):
     x = np.sin(theta_rad) * np.cos(phi_rad)
     y = np.sin(theta_rad) * np.sin(phi_rad)
@@ -48,7 +49,7 @@ def apply_gate_to_state(theta_deg, phi_deg, gate_name):
     new_phi_rad = np.arctan2(y, x)
     return np.rad2deg(new_theta_rad), np.rad2deg(new_phi_rad % (2 * np.pi))
 
-
+# ------------------- Figure Creation Function -------------------
 def create_figure_for_state(theta_deg, phi_deg):
     """Creates a complete Plotly figure for a given qubit state."""
     fig = go.Figure()
@@ -118,15 +119,16 @@ def get_ai_explanation(state_data, last_action):
         "Explain the concepts of superposition and probability in the context of the given state. "
         "**Crucially, explain the measurement probabilities in all three bases (Z, X, and Y) and how they relate to the state vector's position.** "
         "Do not greet the user. Get straight to the explanation. "
-        "Structure your response in Markdown, using headings, bold text, and lists to improve readability."
+        "Structure your response in Markdown, using headings, bold text, and lists to improve readability.\n\n"
+        "**CRITICAL FORMATTING RULE: Do NOT use LaTeX or $ delimiters. You MUST use standard Unicode characters for all mathematical symbols (e.g., 'θ', 'φ', 'ψ', '|+⟩', '|0⟩').**"
     )
     
-
+    # --- NEW: Extract data from the state_data dictionary ---
     theta_deg = state_data.get('theta', 0)
     phi_deg = state_data.get('phi', 0)
     state_str = state_data.get('state_str', 'N/A')
     
-
+    # Format probability strings
     prob_z = state_data.get('prob_z', [0, 0])
     prob_x = state_data.get('prob_x', [0, 0])
     prob_y = state_data.get('prob_y', [0, 0])
