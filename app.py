@@ -332,8 +332,9 @@ def update_ai_explanation(n_clicks, state_data):
 
     explanation = get_ai_explanation(state_data, last_action)
     
-    # This line is now the *only* thing responsible for MathJax.
-    return dcc.Markdown(explanation, dangerously_allow_html=True, link_target="_blank", mathjax=True)
+    # --- THE FIX ---
+    # Remove dangerously_allow_html=True
+    return dcc.Markdown(explanation, link_target="_blank", mathjax=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
