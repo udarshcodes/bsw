@@ -29,3 +29,5 @@ Quantum Logic: Qiskit
 AI Explanations: Google Gemini API
 
 Deployment: Render
+
+Made by: Udarsh Goyal & Abhinav S P
