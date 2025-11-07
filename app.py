@@ -10,6 +10,7 @@ import json # Import json, which is used later
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
 # Initialize the Dash app (which uses Flask as its server)
+# The assets/custom.css file will be loaded automatically by Dash
 app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
 server = app.server  # Expose the Flask server for deployment
 
@@ -54,20 +55,8 @@ app.layout = html.Div(style={
     # --- Hidden Store for State ---
     dcc.Store(id='current-state-store'),
     
-    # --- NEW: Custom CSS for slider text and button clicks ---
-    html.STYLE("""
-        .rc-slider-mark-text {
-            font-size: 15px !important;
-            color: #A0A0A5 !important;
-            padding-top: 5px;
-        }
-        .button-clicked {
-            transform: scale(0.95);
-            opacity: 0.7;
-            transition: all 0.1s ease-out;
-        }
-    """),
-    # --- END NEW CSS ---
+    # --- The html.STYLE block has been REMOVED from here ---
+    # The assets/custom.css file replaces it.
 
     # --- Header/Navbar ---
     html.Header(style={
@@ -193,7 +182,7 @@ app.layout = html.Div(style={
         ])
     ]),
     
-    # --- NEW: AI Explanation Section (Moved to Bottom) ---
+    # --- AI Explanation Section (Moved to Bottom) ---
     html.Div(style={
         'padding': '0 40px', # Match horizontal padding
         'maxWidth': '1200px', # Control max width
@@ -446,7 +435,7 @@ def update_ai_explanation(n_clicks, state_data):
     return dcc.Markdown(explanation, link_target="_blank")
 
 
-# --- NEW: Clientside Callback for Button Click Animation ---
+# --- Clientside Callback for Button Click Animation ---
 app.clientside_callback(
     """
     function(n_x, n_y, n_z, n_h, n_s, n_t, n_reset, n_plus, n_minus, n_random) {
@@ -468,6 +457,7 @@ app.clientside_callback(
                 element.classList.remove('button-clicked');
             }, 150); // 150ms matches the animation
         }
+        return dash_clientside.no_update; // Don't update the output
     }
     """,
     Output('current-state-store', 'data', allow_duplicate=True), # Dummy output
