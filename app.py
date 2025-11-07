@@ -1,10 +1,10 @@
 # app.py
 
 import dash
-from dash import dcc, html, Input, Output, State, callback_context, no_update
+from dash import dcc, html, Input, Output, State, callback_context
 import numpy as np
 import random
-import json
+import json # Import json, which is used later
 
 # Import functions from our logic file
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
@@ -37,7 +37,7 @@ section_header_style = {
     'fontWeight': '600'
 }
 
-# --- GitHub Logo SVG ---
+# --- GitHub Logo SVG Fix ---
 # This is the raw, URL-encoded data for the GitHub logo SVG.
 # We use html.Img and a data URI, which is the correct way to embed an SVG in Dash.
 github_logo_data_uri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='18' height='18' fill='white'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'%3E%3C/path%3E%3C/svg%3E"
@@ -71,6 +71,7 @@ app.layout = html.Div(style={
         html.A(
             # --- GitHub Button with Logo ---
             children=[
+                # --- FIX: Replaced html.Svg with html.Img ---
                 html.Img(src=github_logo_data_uri, style={'marginRight': '8px', 'verticalAlign': 'text-bottom'}),
                 " GITHUB"
             ],
@@ -107,20 +108,19 @@ app.layout = html.Div(style={
         # --- Left Side: The 3D Plot ---
         html.Div(
             dcc.Graph(id='bloch-sphere-graph', figure=create_figure_for_state(0, 0)),
-            # --- "ZOOM IN" -> Increased max width ---
             style={'flex': '1 1 700px', 'minWidth': '400px', 'maxWidth': '700px'}
         ),
         
         # --- Right Side: Controls ---
         html.Div(style={
-            # --- "ZOOM IN" -> Increased max width ---
             'flex': '1 1 500px',
             'minWidth': '400px',
             'maxWidth': '550px',
             'padding': '25px', # More padding
             'border': '1px solid #333',
             'borderRadius': '18px', # Apple-style rounded corners
-            'backgroundColor': '#2C2C2E' # Apple's panel color
+            'backgroundColor': '#2C2C2E', # Apple's panel color
+            'boxShadow': '0 8px 32px rgba(0, 0, 0, 0.2)' # Soft shadow
         }, children=[
             
             html.H2("State Controls", style={**section_header_style, 'marginTop': '0'}), # Changed to H2
@@ -202,7 +202,7 @@ app.layout = html.Div(style={
         ])
     ]),
 
-    # --- Footer ---
+    # --- FOOTER FIX: Moved inside the main layout Div ---
     html.Footer(
         children=[
             "Made with ",
@@ -220,17 +220,18 @@ app.layout = html.Div(style={
         }
     )
     # --- END FOOTER ---
-])
+
+]) # <-- This is the closing bracket for the main html.Div
+
 
 # --- Main Callback for Core Logic ---
+# This callback now calculates EVERYTHING and stores it in dcc.Store
 @app.callback(
     Output('bloch-sphere-graph', 'figure'),
     Output('theta-slider', 'value'),
     Output('phi-slider', 'value'),
     Output('phi-input', 'value'),
-    Output('current-state-store', 'data'),
-    Output('state-vector-readout', 'children'),
-    Output('probability-display-area', 'children'),
+    Output('current-state-store', 'data'), # <-- NEW: Output to state store
     Input('theta-slider', 'value'),
     Input('phi-slider', 'value'),
     Input('phi-input', 'value'),
@@ -268,18 +269,26 @@ def update_sphere_and_readouts(
         new_theta = np.rad2deg(np.arccos(2 * random.random() - 1))
         new_phi = 360 * random.random()
     
+    # --- NEW: All Calculations Happen Here ---
     updated_figure = create_figure_for_state(new_theta, new_phi)
     
     theta_rad, phi_rad = np.deg2rad(new_theta), np.deg2rad(new_phi)
     alpha = np.cos(theta_rad / 2)
     beta = np.exp(1j * phi_rad) * np.sin(theta_rad / 2)
     
+    # Use .real and .imag to handle potential floating point inaccuracies
     state_str = f"|ψ⟩ = {alpha.real:.2f}{alpha.imag:+.2f}j |0⟩ + ({beta.real:.2f}{beta.imag:+.2f}j) |1⟩"
     
+    # Z-Basis Probs
     p_z_0 = (np.abs(alpha)**2)
     p_z_1 = (np.abs(beta)**2)
+    
+    # X-Basis Probs: |+⟩ = 1/sqrt(2)(|0⟩ + |1⟩), |−⟩ = 1/sqrt(2)(|0⟩ - |1⟩)
     p_x_plus = 0.5 * (np.abs(alpha + beta)**2)
     p_x_minus = 0.5 * (np.abs(alpha - beta)**2)
+    
+    # Y-Basis Probs: |+i⟩ = 1/sqrt(2)(|0⟩ + i|1⟩), |-i⟩ = 1/sqrt(2)(|0⟩ - i|1⟩)
+    # This is the corrected logic from your file
     p_y_plus = 0.5 * (np.abs(alpha - 1j * beta)**2) 
     p_y_minus = 0.5 * (np.abs(alpha + 1j * beta)**2) 
 
@@ -293,43 +302,89 @@ def update_sphere_and_readouts(
         'last_action': triggered_id
     }
     
-    # --- NEW AESTHETICS: Probability Cards ---
+    return updated_figure, new_theta, new_phi, new_phi, store_data
+
+
+# --- NEW: Callback for Displaying Readouts ---
+# This callback just reads from the store and formats the display.
+@app.callback(
+    Output('state-vector-readout', 'children'),
+    Output('probability-display-area', 'children'),
+    Input('current-state-store', 'data')
+)
+def update_readouts(data):
+    if not data:
+        # Default state on first load
+        state_html = "|ψ⟩ = 1.00+0.00j |0⟩ + (0.00+0.00j) |1⟩"
+        prob_cards = []
+        for basis, states in [
+            ('Z-Basis', [('|0⟩', 1.0), ('|1⟩', 0.0)]),
+            ('X-Basis', [('|+⟩', 0.5), ('|−⟩', 0.5)]),
+            ('Y-Basis', [('|+i⟩', 0.5), ('|−i⟩', 0.5)]),
+        ]:
+            prob_cards.append(
+                html.Div([
+                    html.H4(basis, style={'textAlign': 'center', 'margin': '0 0 10px 0', 'color': '#aaa', 'fontWeight': '500'}),
+                    html.Div([
+                        html.Div(f"P({states[0][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
+                        html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
+                    ], style={'textAlign': 'center'}),
+                    html.Div([
+                        html.Div(f"P({states[1][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
+                        html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
+                    ], style={'textAlign': 'center', 'marginTop': '10px'}),
+                ], style={
+                    'flex': '1', 'minWidth': '110px', 'padding': '15px',
+                    'backgroundColor': '#333333', 'borderRadius': '12px'
+                })
+            )
+        prob_html = [
+            html.B("Measurement Probabilities:", style={'fontSize': '1.1em'}),
+            html.Div(prob_cards, style={'display': 'flex', 'gap': '10px', 'marginTop': '10px', 'flexWrap': 'wrap'})
+        ]
+        return state_html, prob_html
+
+    # This runs on every update after the first load
+    state_html = data['state_str']
+    
+    # --- AESTHETICS: Build Probability Cards ---
     prob_cards = []
     for basis, states in [
-        ('Z-Basis', [('|0⟩', store_data['prob_z'][0]), ('|1⟩', store_data['prob_z'][1])]),
-        ('X-Basis', [('|+⟩', store_data['prob_x'][0]), ('|−⟩', store_data['prob_x'][1])]),
-        ('Y-Basis', [('|+i⟩', store_data['prob_y'][0]), ('|−i⟩', store_data['prob_y'][1])]),
+        ('Z-Basis', [('|0⟩', data['prob_z'][0]), ('|1⟩', data['prob_z'][1])]),
+        ('X-Basis', [('|+⟩', data['prob_x'][0]), ('|−⟩', data['prob_x'][1])]),
+        ('Y-Basis', [('|+i⟩', data['prob_y'][0]), ('|−i⟩', data['prob_y'][1])]),
     ]:
         prob_cards.append(
             html.Div([
                 html.H4(basis, style={'textAlign': 'center', 'margin': '0 0 10px 0', 'color': '#aaa', 'fontWeight': '500'}),
                 html.Div([
                     html.Div(f"P({states[0][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
-                    html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'}) # Bigger text
+                    html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
                 ], style={'textAlign': 'center'}),
                 html.Div([
                     html.Div(f"P({states[1][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
-                    html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'}) # Bigger text
+                    html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
                 ], style={'textAlign': 'center', 'marginTop': '10px'}),
             ], style={
-                'flex': '1', 'minWidth': '110px', 'padding': '15px', # Wider cards
-                'backgroundColor': '#333333', 'borderRadius': '12px' # Rounded cards
+                'flex': '1', 'minWidth': '110px', 'padding': '15px',
+                'backgroundColor': '#333333', 'borderRadius': '12px'
             })
         )
         
     prob_html = [
-        html.B("Measurement Probabilities:", style={'fontSize': '1.1em'}), # Bigger text
+        html.B("Measurement Probabilities:", style={'fontSize': '1.1em'}),
         html.Div(prob_cards, style={'display': 'flex', 'gap': '10px', 'marginTop': '10px', 'flexWrap': 'wrap'})
     ]
 
-    return updated_figure, new_theta, new_phi, new_phi, store_data, state_str, prob_html
+    return state_html, prob_html
 
 
 # --- Updated Callback for AI Explanation ---
+# This callback now reads from the state store, which is much cleaner.
 @app.callback(
     Output('ai-explanation-output', 'children'),
     Input('ai-explain-button', 'n_clicks'),
-    State('current-state-store', 'data'),
+    State('current-state-store', 'data'), # <-- NEW: Reads from the state store
     prevent_initial_call=True
 )
 def update_ai_explanation(n_clicks, state_data):
@@ -342,7 +397,8 @@ def update_ai_explanation(n_clicks, state_data):
 
     explanation = get_ai_explanation(state_data, last_action)
     
-    # Remove mathjax=True. This allows the unicode symbols to render correctly.
+    # --- MATHJAX FIX ---
+    # Remove mathjax=True. This allows the unicode symbols (from the new prompt) to render correctly.
     return dcc.Markdown(explanation, link_target="_blank")
 
 if __name__ == '__main__':
