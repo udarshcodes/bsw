@@ -62,7 +62,7 @@ app.layout = html.Div(style={
         html.A(
             "GITHUB",
             # --- IMPORTANT: REPLACE THIS WITH YOUR REPO LINK ---
-            href="https://github.com/your-username/your-repo-name",
+            href="https://github.com/udarshcodes/bsw",
             target="_blank", # Opens in a new tab
             style={
                 'fontSize': '14px',
@@ -198,6 +198,7 @@ app.layout = html.Div(style={
             'paddingTop': '20px',
             'borderTop': '1px solid #333',
             'color': '#888',
+            'backgroundColor': '#7B68EE',
             'fontSize': '0.9em'
         }
     )
