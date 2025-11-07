@@ -250,7 +250,8 @@ app.layout = html.Div(style={
             'paddingTop': '30px', 
             'borderTop': '1px solid #333',
             'color': '#888',
-            'fontSize': '14px' 
+            'fontcolor': "#007AFF"
+            'fontSize': '18px' 
         }
     )
     # --- END FOOTER ---
