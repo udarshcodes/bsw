@@ -30,4 +30,4 @@ AI Explanations: Google Gemini API
 
 Deployment: Render
 
-Made by: Udarsh Goyal & Abhinav S P
+Made by: Udarsh Goyal, Rajat Katiyar, Abhinav S P
