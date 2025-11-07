@@ -20,7 +20,7 @@ common_button_style = {
     'border': 'none',
     'borderRadius': '8px',
     'padding': '10px 15px',
-    'fontSize': '14px',
+    'fontSize': '16px',
     'fontWeight': '500',
     'cursor': 'pointer',
     'transition': 'background-color 0.2s ease',
