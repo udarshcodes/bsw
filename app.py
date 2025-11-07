@@ -13,34 +13,50 @@ from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get
 app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
 server = app.server  # Expose the Flask server for deployment
 
-# --- NEW AESTHETICS: Common style for all buttons ---
+# --- NEW AESTHETICS: Apple-themed button style ---
 common_button_style = {
-    'backgroundColor': '#7B68EE', # MediumSlateBlue
+    'backgroundColor': '#007AFF', # Apple's accent blue
     'color': 'white',
     'border': 'none',
-    'borderRadius': '8px',
-    'padding': '10px 15px',
-    'fontSize': '16px',
-    'fontWeight': '500',
+    'borderRadius': '12px', # Softer corners
+    'padding': '12px 18px', # More padding
+    'fontSize': '15px', # Bigger text
+    'fontWeight': '600', # Bolder
     'cursor': 'pointer',
     'transition': 'background-color 0.2s ease',
     'width': '100%'
 }
 
-# --- NEW AESTHETICS: Common style for section headers ---
+# --- NEW AESTHETICS: Apple-themed section headers ---
 section_header_style = {
-    'marginTop': '25px',
-    'marginBottom': '10px',
-    'borderBottom': '1px solid #444',
-    'paddingBottom': '5px'
+    'marginTop': '30px',
+    'marginBottom': '15px',
+    'borderBottom': '1px solid #333', # Softer border
+    'paddingBottom': '10px',
+    'fontSize': '1.3rem', # Bigger text
+    'fontWeight': '600'
 }
+
+# --- GitHub Logo SVG ---
+# We define the SVG path for the GitHub logo
+github_logo_svg = html.Svg(
+    children=[
+        html.Path(d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z")
+    ],
+    viewBox="0 0 16 16",
+    width="18",
+    height="18",
+    fill="currentColor",
+    style={'marginRight': '8px', 'verticalAlign': 'text-bottom'} # Aligns logo with text
+)
 
 # --- App Layout ---
 app.layout = html.Div(style={
-    'backgroundColor': '#121212', # Darker background
-    'color': '#E0E0E0', # Lighter text
-    'fontFamily': 'Inter', 
-    'minHeight': '100vh'
+    'backgroundColor': '#1D1D1F', # Apple's dark grey
+    'color': '#F5F5F7', # Apple's off-white
+    'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 
+    'minHeight': '100vh',
+    'fontSize': '16px' # Larger base font
 }, children=[
     
     # --- Hidden Store for State ---
@@ -48,31 +64,38 @@ app.layout = html.Div(style={
 
     # --- Header/Navbar ---
     html.Header(style={
-        'backgroundColor': '#1E1E1E', # Dark panel color
+        'backgroundColor': '#333333', # Apple's header bar
         'borderBottom': '1px solid #333',
-        'padding': '15px 30px',
+        'padding': '15px 40px', # More padding
         'display': 'flex',
         'justifyContent': 'space-between',
         'alignItems': 'center'
     }, children=[
         html.Div(
             "INTERACTIVE BLOCH SPHERE",
-            style={'fontSize': '20px', 'fontWeight': '600', 'color': '#7B68EE'} # Accent color
+            style={'fontSize': '22px', 'fontWeight': '600', 'color': '#007AFF'} # Apple Blue
         ),
         html.A(
-            "GITHUB",
+            # --- GitHub Button with Logo ---
+            children=[
+                github_logo_svg,
+                " GITHUB"
+            ],
             # --- IMPORTANT: REPLACE THIS WITH YOUR REPO LINK ---
-            href="https://github.com/udarshcodes/bsw",
+            href="https://github.com/your-username/your-repo-name",
             target="_blank", # Opens in a new tab
             style={
+                'display': 'flex', # To align logo and text
+                'alignItems': 'center',
                 'fontSize': '14px',
                 'fontWeight': '500',
                 'color': 'white',
                 'textDecoration': 'none',
-                'padding': '8px 12px',
-                'borderRadius': '6px',
-                'border': '1px solid #444',
-                'transition': 'background-color 0.2s ease'
+                'padding': '8px 16px', # Pill shape padding
+                'borderRadius': '999px', # Pill shape
+                'backgroundColor': '#333',
+                'border': '1px solid #555',
+                'transition': 'all 0.2s ease'
             }
         )
     ]),
@@ -82,10 +105,10 @@ app.layout = html.Div(style={
     html.Div(style={
         'display': 'flex',
         'flexDirection': 'row',
-        'flexWrap': 'wrap', # Allow wrapping on small screens
+        'flexWrap': 'wrap',
         'justifyContent': 'center',
-        'gap': '30px',
-        'padding': '30px 40px' # Added more padding
+        'gap': '40px', # More gap
+        'padding': '40px 40px' # More padding
     }, children=[
         
         # --- Left Side: The 3D Plot ---
@@ -101,13 +124,13 @@ app.layout = html.Div(style={
             'flex': '1 1 500px',
             'minWidth': '400px',
             'maxWidth': '550px',
-            'padding': '20px',
+            'padding': '25px', # More padding
             'border': '1px solid #333',
-            'borderRadius': '12px',
-            'backgroundColor': '#1E1E1E' # Dark panel color
+            'borderRadius': '18px', # Apple-style rounded corners
+            'backgroundColor': '#2C2C2E' # Apple's panel color
         }, children=[
             
-            html.H3("State Controls", style=section_header_style),
+            html.H2("State Controls", style={**section_header_style, 'marginTop': '0'}), # Changed to H2
             html.Label(html.B("Theta (θ) degrees")),
             dcc.Slider(id='theta-slider', min=0, max=180, step=1, value=0, marks={i: str(i) for i in range(0, 181, 45)}),
             
@@ -119,13 +142,13 @@ app.layout = html.Div(style={
                         style={'flex': '1'}
                     ),
                     dcc.Input(id='phi-input', type='number', placeholder='φ', min=0, max=360, step=1, value=0, style={
-                        'width': '70px', 'textAlign': 'center', 'background': '#2a2a2a', 
-                        'color': 'white', 'border': '1px solid #444', 'borderRadius': '4px'
+                        'width': '70px', 'textAlign': 'center', 'background': '#333333', 
+                        'color': 'white', 'border': '1px solid #555', 'borderRadius': '8px' # Rounded input
                     })
                 ])
             ]),
             
-            html.H3("Quantum Gates", style=section_header_style),
+            html.H2("Quantum Gates", style=section_header_style), # Changed to H2
             html.Div(style={'display': 'grid', 'gridTemplateColumns': 'repeat(3, 1fr)', 'gap': '10px'}, children=[
                 html.Button('X Gate', id='gate-x', n_clicks=0, style=common_button_style),
                 html.Button('Y Gate', id='gate-y', n_clicks=0, style=common_button_style),
@@ -135,7 +158,7 @@ app.layout = html.Div(style={
                 html.Button('T Gate', id='gate-t', n_clicks=0, style=common_button_style),
             ]),
             
-            html.H3("Presets", style=section_header_style),
+            html.H2("Presets", style=section_header_style), # Changed to H2
             html.Div(style={'display': 'grid', 'gridTemplateColumns': 'repeat(2, 1fr)', 'gap': '10px'}, children=[
                 html.Button('Reset to |0⟩', id='reset-button', n_clicks=0, style=common_button_style),
                 html.Button('Set to |+⟩', id='plus-button', n_clicks=0, style=common_button_style),
@@ -143,17 +166,18 @@ app.layout = html.Div(style={
                 html.Button('Random State', id='random-button', n_clicks=0, style=common_button_style),
             ]),
             
-            html.H3("Live Readouts", style=section_header_style),
+            html.H2("Live Readouts", style=section_header_style), # Changed to H2
             html.Div(id='state-vector-readout', style={
-                'fontSize': '1.1em', 'fontFamily': 'monospace', 'padding': '10px', 
-                'backgroundColor': '#2a2a2a', 'borderRadius': '8px', 'color': '#87CEEB' # Sky blue
+                'fontSize': '1.2em', # Bigger text
+                'fontFamily': 'monospace', 'padding': '15px', # More padding
+                'backgroundColor': '#333333', 'borderRadius': '12px', 'color': '#87CEEB'
             }),
             
-            html.Div(id='probability-display-area', style={'marginTop': '15px'}),
+            html.Div(id='probability-display-area', style={'marginTop': '20px'}),
             
-            html.H3("AI Explanation", style=section_header_style),
+            html.H2("AI Explanation", style=section_header_style), # Changed to H2
             html.Button("Explain with AI", id="ai-explain-button", n_clicks=0, style={
-                **common_button_style, 'backgroundColor': '#28A745' # Green AI button
+                **common_button_style, 'backgroundColor': '#34C759', 'fontWeight': '600' # Apple Green
             }),
             html.Div(
                 dcc.Loading(
@@ -168,17 +192,18 @@ app.layout = html.Div(style={
                             'paddingRight': '10px'
                         }
                     ),
-                    color="#7B68EE", # Match accent
+                    color="#007AFF", # Match accent
                     style={'marginTop': '15px'}
                 ),
                 style={
                     'marginTop': '15px', 
-                    'padding': '15px', 
+                    'padding': '20px', # More padding
                     'border': '1px solid #333', 
-                    'borderRadius': '8px', 
+                    'borderRadius': '12px', # Rounded
                     'minHeight': '50px', 
-                    'backgroundColor': '#2a2a2a',
-                    'overflowWrap': 'break-word'
+                    'backgroundColor': '#333333',
+                    'overflowWrap': 'break-word',
+                    'lineHeight': '1.6' # Improved readability
                 }
             )
         ])
@@ -194,12 +219,11 @@ app.layout = html.Div(style={
         style={
             'textAlign': 'center',
             'marginTop': '40px',
-            'paddingBottom': '20px',
-            'paddingTop': '20px',
+            'paddingBottom': '30px', # More padding
+            'paddingTop': '30px', # More padding
             'borderTop': '1px solid #333',
             'color': '#888',
-            'backgroundColor': '#7B68EE',
-            'fontSize': '0.9em'
+            'fontSize': '14px' # Bigger
         }
     )
     # --- END FOOTER ---
@@ -276,6 +300,7 @@ def update_sphere_and_readouts(
         'last_action': triggered_id
     }
     
+    # --- NEW AESTHETICS: Probability Cards ---
     prob_cards = []
     for basis, states in [
         ('Z-Basis', [('|0⟩', store_data['prob_z'][0]), ('|1⟩', store_data['prob_z'][1])]),
@@ -284,23 +309,23 @@ def update_sphere_and_readouts(
     ]:
         prob_cards.append(
             html.Div([
-                html.H4(basis, style={'textAlign': 'center', 'margin': '0 0 10px 0', 'color': '#aaa'}),
+                html.H4(basis, style={'textAlign': 'center', 'margin': '0 0 10px 0', 'color': '#aaa', 'fontWeight': '500'}),
                 html.Div([
-                    html.Div(f"P({states[0][0]})", style={'fontWeight': '500'}),
-                    html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.1em'})
+                    html.Div(f"P({states[0][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
+                    html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'}) # Bigger text
                 ], style={'textAlign': 'center'}),
                 html.Div([
-                    html.Div(f"P({states[1][0]})", style={'fontWeight': '500'}),
-                    html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.1em'})
+                    html.Div(f"P({states[1][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
+                    html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'}) # Bigger text
                 ], style={'textAlign': 'center', 'marginTop': '10px'}),
             ], style={
-                'flex': '1', 'minWidth': '100px', 'padding': '15px',
-                'backgroundColor': '#2a2a2a', 'borderRadius': '8px' # Updated card color
+                'flex': '1', 'minWidth': '110px', 'padding': '15px', # Wider cards
+                'backgroundColor': '#333333', 'borderRadius': '12px' # Rounded cards
             })
         )
         
     prob_html = [
-        html.B("Measurement Probabilities:"),
+        html.B("Measurement Probabilities:", style={'fontSize': '1.1em'}), # Bigger text
         html.Div(prob_cards, style={'display': 'flex', 'gap': '10px', 'marginTop': '10px', 'flexWrap': 'wrap'})
     ]
 
