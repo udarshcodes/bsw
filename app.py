@@ -55,7 +55,7 @@ app.layout = html.Div(style={
     dcc.Store(id='current-state-store'),
     
     # --- NEW: Custom CSS for slider text and button clicks ---
-    html.Style("""
+    html.STYLE("""
         .rc-slider-mark-text {
             font-size: 15px !important;
             color: #A0A0A5 !important;
