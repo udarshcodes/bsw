@@ -13,9 +13,9 @@ from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get
 app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
 server = app.server  # Expose the Flask server for deployment
 
-# --- AESTHETICS: Common style for all buttons ---
+# --- NEW AESTHETICS: Common style for all buttons ---
 common_button_style = {
-    'backgroundColor': '#007aff',
+    'backgroundColor': '#7B68EE', # MediumSlateBlue
     'color': 'white',
     'border': 'none',
     'borderRadius': '8px',
@@ -27,7 +27,7 @@ common_button_style = {
     'width': '100%'
 }
 
-# --- AESTHETICS: Common style for section headers ---
+# --- NEW AESTHETICS: Common style for section headers ---
 section_header_style = {
     'marginTop': '25px',
     'marginBottom': '10px',
@@ -36,14 +36,19 @@ section_header_style = {
 }
 
 # --- App Layout ---
-app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', 'fontFamily': 'Inter', 'minHeight': '100vh'}, children=[
+app.layout = html.Div(style={
+    'backgroundColor': '#121212', # Darker background
+    'color': '#E0E0E0', # Lighter text
+    'fontFamily': 'Inter', 
+    'minHeight': '100vh'
+}, children=[
     
     # --- Hidden Store for State ---
     dcc.Store(id='current-state-store'),
 
-    # --- NEW: Header/Navbar ---
+    # --- Header/Navbar ---
     html.Header(style={
-        'backgroundColor': '#1c1c1e',
+        'backgroundColor': '#1E1E1E', # Dark panel color
         'borderBottom': '1px solid #333',
         'padding': '15px 30px',
         'display': 'flex',
@@ -52,7 +57,7 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
     }, children=[
         html.Div(
             "INTERACTIVE BLOCH SPHERE",
-            style={'fontSize': '20px', 'fontWeight': '600', 'color': '#00BFFF'}
+            style={'fontSize': '20px', 'fontWeight': '600', 'color': '#7B68EE'} # Accent color
         ),
         html.A(
             "GITHUB",
@@ -66,12 +71,12 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
                 'textDecoration': 'none',
                 'padding': '8px 12px',
                 'borderRadius': '6px',
-                'border': '1px solid #555',
+                'border': '1px solid #444',
                 'transition': 'background-color 0.2s ease'
             }
         )
     ]),
-    # --- END NEW HEADER ---
+    # --- END HEADER ---
 
     # --- Main Content Area ---
     html.Div(style={
@@ -80,24 +85,26 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
         'flexWrap': 'wrap', # Allow wrapping on small screens
         'justifyContent': 'center',
         'gap': '30px',
-        'padding': '30px 20px' # Added more padding
+        'padding': '30px 40px' # Added more padding
     }, children=[
         
         # --- Left Side: The 3D Plot ---
         html.Div(
             dcc.Graph(id='bloch-sphere-graph', figure=create_figure_for_state(0, 0)),
-            style={'flex': '1 1 600px', 'minWidth': '400px', 'maxWidth': '600px'}
+            # --- "ZOOM IN" -> Increased max width ---
+            style={'flex': '1 1 700px', 'minWidth': '400px', 'maxWidth': '700px'}
         ),
         
         # --- Right Side: Controls ---
         html.Div(style={
-            'flex': '1 1 450px',
+            # --- "ZOOM IN" -> Increased max width ---
+            'flex': '1 1 500px',
             'minWidth': '400px',
-            'maxWidth': '500px',
+            'maxWidth': '550px',
             'padding': '20px',
             'border': '1px solid #333',
             'borderRadius': '12px',
-            'backgroundColor': '#1c1c1e'
+            'backgroundColor': '#1E1E1E' # Dark panel color
         }, children=[
             
             html.H3("State Controls", style=section_header_style),
@@ -111,7 +118,10 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
                         dcc.Slider(id='phi-slider', min=0, max=360, step=1, value=0, marks={i: str(i) for i in range(0, 361, 90)}),
                         style={'flex': '1'}
                     ),
-                    dcc.Input(id='phi-input', type='number', placeholder='φ', min=0, max=360, step=1, value=0, style={'width': '70px', 'textAlign': 'center', 'background': '#333', 'color': 'white', 'border': '1px solid #555', 'borderRadius': '4px'})
+                    dcc.Input(id='phi-input', type='number', placeholder='φ', min=0, max=360, step=1, value=0, style={
+                        'width': '70px', 'textAlign': 'center', 'background': '#2a2a2a', 
+                        'color': 'white', 'border': '1px solid #444', 'borderRadius': '4px'
+                    })
                 ])
             ]),
             
@@ -134,12 +144,17 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
             ]),
             
             html.H3("Live Readouts", style=section_header_style),
-            html.Div(id='state-vector-readout', style={'fontSize': '1.1em', 'fontFamily': 'monospace', 'padding': '10px', 'backgroundColor': '#2c2c2e', 'borderRadius': '8px'}),
+            html.Div(id='state-vector-readout', style={
+                'fontSize': '1.1em', 'fontFamily': 'monospace', 'padding': '10px', 
+                'backgroundColor': '#2a2a2a', 'borderRadius': '8px', 'color': '#87CEEB' # Sky blue
+            }),
             
             html.Div(id='probability-display-area', style={'marginTop': '15px'}),
             
             html.H3("AI Explanation", style=section_header_style),
-            html.Button("Explain with AI", id="ai-explain-button", n_clicks=0, style={**common_button_style, 'backgroundColor': '#34C759'}), # Green AI button
+            html.Button("Explain with AI", id="ai-explain-button", n_clicks=0, style={
+                **common_button_style, 'backgroundColor': '#28A745' # Green AI button
+            }),
             html.Div(
                 dcc.Loading(
                     id="loading-spinner",
@@ -153,7 +168,7 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
                             'paddingRight': '10px'
                         }
                     ),
-                    color="#00BFFF",
+                    color="#7B68EE", # Match accent
                     style={'marginTop': '15px'}
                 ),
                 style={
@@ -162,14 +177,14 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
                     'border': '1px solid #333', 
                     'borderRadius': '8px', 
                     'minHeight': '50px', 
-                    'backgroundColor': '#2c2c2e',
+                    'backgroundColor': '#2a2a2a',
                     'overflowWrap': 'break-word'
                 }
             )
         ])
     ]),
 
-    # --- NEW: Footer ---
+    # --- Footer ---
     html.Footer(
         children=[
             "Made with ",
@@ -186,7 +201,7 @@ app.layout = html.Div(style={'backgroundColor': '#111111', 'color': '#FFFFFF', '
             'fontSize': '0.9em'
         }
     )
-    # --- END NEW FOOTER ---
+    # --- END FOOTER ---
 ])
 
 # --- Main Callback for Core Logic ---
@@ -279,7 +294,7 @@ def update_sphere_and_readouts(
                 ], style={'textAlign': 'center', 'marginTop': '10px'}),
             ], style={
                 'flex': '1', 'minWidth': '100px', 'padding': '15px',
-                'backgroundColor': '#2c2c2e', 'borderRadius': '8px'
+                'backgroundColor': '#2a2a2a', 'borderRadius': '8px' # Updated card color
             })
         )
         
@@ -308,7 +323,6 @@ def update_ai_explanation(n_clicks, state_data):
 
     explanation = get_ai_explanation(state_data, last_action)
     
-    # --- THE FIX ---
     # Remove mathjax=True. This allows the unicode symbols to render correctly.
     return dcc.Markdown(explanation, link_target="_blank")
 
