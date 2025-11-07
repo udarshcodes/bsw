@@ -249,8 +249,7 @@ app.layout = html.Div(style={
             'paddingBottom': '30px', 
             'paddingTop': '30px', 
             'borderTop': '1px solid #333',
-            'color': '#888',
-            'fontcolor': "#007AFF"
+            'color': '#007AFF',
             'fontSize': '18px' 
         }
     )
