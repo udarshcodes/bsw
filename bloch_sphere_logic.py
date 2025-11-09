@@ -111,7 +111,7 @@ def get_ai_explanation(state_data, last_action):
             "Please generate a new key from Google AI Studio and ensure it is correctly placed in the `GEMINI_API_KEY` secret file on Render."
         )
     
-    api_url = f"https.generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
 
     # --- NEW: Updated System Prompt ---
     system_prompt = (
