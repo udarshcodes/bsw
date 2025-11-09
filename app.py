@@ -1,12 +1,10 @@
-# app.py
-
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import numpy as np
 import random
-import json # Import json, which is used later
+import json 
 
-# Import functions from our logic file
+#Import functions from our logic file
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
 # Initialize the Dash app (which uses Flask as its server)
@@ -14,9 +12,9 @@ from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get
 app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
 server = app.server  # Expose the Flask server for deployment
 
-# --- NEW AESTHETICS: Apple-themed button style ---
+#Button Style
 common_button_style = {
-    'backgroundColor': '#007AFF', # Apple's accent blue
+    'backgroundColor': '#007AFF', 
     'color': 'white',
     'border': 'none',
     'borderRadius': '12px', # Softer corners
@@ -29,7 +27,7 @@ common_button_style = {
     'outline': 'none' # Remove default outline
 }
 
-# --- NEW AESTHETICS: Apple-themed section headers ---
+#Section Headers
 section_header_style = {
     'marginTop': '30px',
     'marginBottom': '15px',
@@ -39,45 +37,43 @@ section_header_style = {
     'fontWeight': '600'
 }
 
-# --- GitHub Logo SVG Fix ---
+#GitHub Logo
 github_logo_data_uri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='18' height='18' fill='white'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'%3E%3C/path%3E%3C/svg%3E"
 
 
-# --- App Layout ---
+#App Layout
 app.layout = html.Div(style={
-    'backgroundColor': '#1D1D1F', # Apple's dark grey
-    'color': '#F5F5F7', # Apple's off-white
+    'backgroundColor': '#1D1D1F', 
+    'color': '#F5F5F7',
     'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 
     'minHeight': '100vh',
-    'fontSize': '16px' # Larger base font
+    'fontSize': '16px' 
 }, children=[
     
-    # --- Hidden Store for State ---
+    
     dcc.Store(id='current-state-store'),
     
-    # --- The html.STYLE block has been REMOVED from here ---
-    # The assets/custom.css file replaces it.
-
+   
     # --- Header/Navbar ---
     html.Header(style={
-        'backgroundColor': '#333333', # Apple's header bar
+        'backgroundColor': '#333333', 
         'borderBottom': '1px solid #333',
-        'padding': '15px 40px', # More padding
+        'padding': '15px 40px',
         'display': 'flex',
         'justifyContent': 'space-between',
         'alignItems': 'center'
     }, children=[
         html.Div(
             "INTERACTIVE BLOCH SPHERE",
-            style={'fontSize': '22px', 'fontWeight': '600', 'color': '#007AFF'} # Apple Blue
+            style={'fontSize': '22px', 'fontWeight': '600', 'color': '#007AFF'} 
         ),
         html.A(
             children=[
                 html.Img(src=github_logo_data_uri, style={'marginRight': '8px', 'verticalAlign': 'text-bottom'}),
                 " GITHUB"
             ],
-            href="https://github.com/udarshcodes/bsw", # --- UPDATED REPO LINK ---
-            target="_blank", # Opens in a new tab
+            href="https://github.com/udarshcodes/bsw",
+            target="_blank",
             style={
                 'display': 'flex', 
                 'alignItems': 'center',
@@ -86,16 +82,16 @@ app.layout = html.Div(style={
                 'color': 'white',
                 'textDecoration': 'none',
                 'padding': '8px 16px', 
-                'borderRadius': '999px', # Pill shape
+                'borderRadius': '999px', 
                 'backgroundColor': '#333',
                 'border': '1px solid #555',
                 'transition': 'all 0.2s ease'
             }
         )
     ]),
-    # --- END HEADER ---
+    #END HEADER
 
-    # --- Main Content Area ---
+    #Main Content Area
     html.Div(style={
         'display': 'flex',
         'flexDirection': 'row',
@@ -105,13 +101,13 @@ app.layout = html.Div(style={
         'padding': '40px 40px' 
     }, children=[
         
-        # --- Left Side: The 3D Plot ---
+        #Left Side: The 3D Plot
         html.Div(
             dcc.Graph(id='bloch-sphere-graph', figure=create_figure_for_state(0, 0)),
             style={'flex': '1 1 700px', 'minWidth': '400px', 'maxWidth': '700px'}
         ),
         
-        # --- Right Side: Controls ---
+        #Right Side: Controls
         html.Div(style={
             'flex': '1 1 500px',
             'minWidth': '400px',
@@ -125,7 +121,7 @@ app.layout = html.Div(style={
             
             html.H2("State Controls", style={**section_header_style, 'marginTop': '0'}), 
             
-            # --- NEW: Theta Input ---
+            #Theta Input
             html.Label(html.B("Theta (θ) degrees")),
             html.Div(style={'display': 'flex', 'alignItems': 'center', 'gap': '15px'}, children=[
                 html.Div(
@@ -137,7 +133,7 @@ app.layout = html.Div(style={
                     'color': 'white', 'border': '1px solid #555', 'borderRadius': '8px' 
                 })
             ]),
-            # --- END NEW ---
+            
             
             html.Div([
                 html.Label(html.B("Phi (φ) degrees"), style={'marginTop': '20px', 'display': 'block'}),
@@ -182,11 +178,11 @@ app.layout = html.Div(style={
         ])
     ]),
     
-    # --- AI Explanation Section (Moved to Bottom) ---
+    #AI Explanation Section
     html.Div(style={
-        'padding': '0 40px', # Match horizontal padding
-        'maxWidth': '1200px', # Control max width
-        'margin': '20px auto 0 auto' # Center the section
+        'padding': '0 40px', 
+        'maxWidth': '1200px', 
+        'margin': '20px auto 0 auto' 
     }, children=[
         html.Div(style={
             'padding': '25px', 
@@ -198,10 +194,10 @@ app.layout = html.Div(style={
             html.H2("AI Explanation", style={**section_header_style, 'marginTop': '0'}),
             html.Button("Explain with AI", id="ai-explain-button", n_clicks=0, style={
                 **common_button_style, 
-                'backgroundColor': '#34C759', # Apple Green
+                'backgroundColor': '#34C759',
                 'fontWeight': '600',
-                'maxWidth': '400px', # Give button a max width
-                'margin': '0 auto', # Center button
+                'maxWidth': '400px', 
+                'margin': '0 auto', 
                 'display': 'block'
             }),
             html.Div(
@@ -220,7 +216,7 @@ app.layout = html.Div(style={
                         }
                     ),
                     color="#007AFF",
-                    style={'marginTop': '15px'} # Kept for loading spinner spacing
+                    style={'marginTop': '15px'} 
                 ),
                 style={
                     'marginTop': '15px', 
@@ -234,9 +230,9 @@ app.layout = html.Div(style={
             )
         ])
     ]),
-    # --- END AI SECTION ---
+    #END AI SECTION
 
-    # --- Footer ---
+    #Footer
     html.Footer(
         children=[
             "Made with ",
@@ -253,22 +249,22 @@ app.layout = html.Div(style={
             'fontSize': '18px' 
         }
     )
-    # --- END FOOTER ---
+    
 
-]) # <-- This is the closing bracket for the main html.Div
+])
 
 
-# --- Main Callback for Core Logic ---
+#Main Callback for Core Logic
 @app.callback(
     Output('bloch-sphere-graph', 'figure'),
     Output('theta-slider', 'value'),
     Output('phi-slider', 'value'),
-    Output('theta-input', 'value'), # --- NEW OUTPUT ---
+    Output('theta-input', 'value'), 
     Output('phi-input', 'value'),
     Output('current-state-store', 'data'),
     Input('theta-slider', 'value'),
     Input('phi-slider', 'value'),
-    Input('theta-input', 'value'), # --- NEW INPUT ---
+    Input('theta-input', 'value'),
     Input('phi-input', 'value'),
     Input('gate-x', 'n_clicks'), Input('gate-y', 'n_clicks'),
     Input('gate-z', 'n_clicks'), Input('gate-h', 'n_clicks'),
@@ -277,23 +273,23 @@ app.layout = html.Div(style={
     Input('minus-button', 'n_clicks'), Input('random-button', 'n_clicks'),
 )
 def update_sphere_and_readouts(
-    theta_from_slider, phi_from_slider, # --- RENAMED ---
-    theta_from_input, phi_from_input,  # --- NEW ARGS ---
+    theta_from_slider, phi_from_slider, 
+    theta_from_input, phi_from_input,  
     n_x, n_y, n_z, n_h, n_s, n_t,
     n_reset, n_plus, n_minus, n_random
 ):
     ctx = callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'initial_load'
     
-    # --- NEW: Logic for syncing Theta input/slider ---
+   
     if triggered_id == 'theta-input':
         if theta_from_input is None:
             new_theta = theta_from_slider
         else:
-            new_theta = max(0, min(180, theta_from_input)) # Clamp 0-180
+            new_theta = max(0, min(180, theta_from_input))
     else:
         new_theta = theta_from_slider
-    # --- END NEW ---
+    
 
     if triggered_id == 'phi-input':
         if phi_from_input is None:
@@ -306,7 +302,7 @@ def update_sphere_and_readouts(
     gate_map = {'gate-x':'X', 'gate-y':'Y', 'gate-z':'Z', 'gate-h':'H', 'gate-s':'S', 'gate-t':'T'}
 
     if triggered_id in gate_map:
-        new_theta, new_phi = apply_gate_to_state(new_theta, new_phi, gate_map[triggered_id]) # Use new_theta
+        new_theta, new_phi = apply_gate_to_state(new_theta, new_phi, gate_map[triggered_id])
     elif triggered_id == 'reset-button': new_theta, new_phi = 0, 0
     elif triggered_id == 'plus-button': new_theta, new_phi = 90, 0
     elif triggered_id == 'minus-button': new_theta, new_phi = 90, 180
@@ -342,7 +338,7 @@ def update_sphere_and_readouts(
     return updated_figure, new_theta, new_phi, new_theta, new_phi, store_data
 
 
-# --- Callback for Displaying Readouts ---
+
 @app.callback(
     Output('state-vector-readout', 'children'),
     Output('probability-display-area', 'children'),
@@ -383,7 +379,7 @@ def update_readouts(data):
     # This runs on every update after the first load
     state_html = data['state_str']
     
-    # --- AESTHETICS: Build Probability Cards ---
+    #Probability Cards
     prob_cards = []
     for basis, states in [
         ('Z-Basis', [('|0⟩', data['prob_z'][0]), ('|1⟩', data['prob_z'][1])]),
@@ -415,7 +411,7 @@ def update_readouts(data):
     return state_html, prob_html
 
 
-# --- Updated Callback for AI Explanation ---
+#Callback for AI Explanation
 @app.callback(
     Output('ai-explanation-output', 'children'),
     Input('ai-explain-button', 'n_clicks'),
@@ -435,7 +431,7 @@ def update_ai_explanation(n_clicks, state_data):
     return dcc.Markdown(explanation, link_target="_blank")
 
 
-# --- Clientside Callback for Button Click Animation ---
+#Clientside Callback for Button Click Animation
 app.clientside_callback(
     """
     function(n_x, n_y, n_z, n_h, n_s, n_t, n_reset, n_plus, n_minus, n_random) {
@@ -460,7 +456,7 @@ app.clientside_callback(
         return dash_clientside.no_update; // Don't update the output
     }
     """,
-    Output('current-state-store', 'data', allow_duplicate=True), # Dummy output
+    Output('current-state-store', 'data', allow_duplicate=True), 
     Input('gate-x', 'n_clicks'),
     Input('gate-y', 'n_clicks'),
     Input('gate-z', 'n_clicks'),
@@ -473,7 +469,7 @@ app.clientside_callback(
     Input('random-button', 'n_clicks'),
     prevent_initial_call=True
 )
-# --- END NEW ---
+
 
 
 if __name__ == '__main__':
