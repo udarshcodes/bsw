@@ -1,5 +1,3 @@
-# bloch_sphere_logic.py
-
 import numpy as np
 import plotly.graph_objects as go
 from qiskit import QuantumCircuit
@@ -8,14 +6,14 @@ import requests
 import json
 import os
 
-# ------------------- Constants & Styling -------------------
+#Constants & Styling
 BACKGROUND_COLOR = "#111111"
 TEXT_COLOR = "#ffffff"
 GRID_COLOR = "#444444"
 FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 INITIAL_CAMERA = dict(eye=dict(x=1.5, y=1.5, z=1))
 
-# ------------------- Core Quantum & Coordinate Functions -------------------
+#Core Quantum & Coordinate Functions
 def get_bloch_vector_coordinates(theta_rad, phi_rad):
     x = np.sin(theta_rad) * np.cos(phi_rad)
     y = np.sin(theta_rad) * np.sin(phi_rad)
@@ -49,7 +47,7 @@ def apply_gate_to_state(theta_deg, phi_deg, gate_name):
     new_phi_rad = np.arctan2(y, x)
     return np.rad2deg(new_theta_rad), np.rad2deg(new_phi_rad % (2 * np.pi))
 
-# ------------------- Figure Creation Function -------------------
+#Figure Creation Function
 def create_figure_for_state(theta_deg, phi_deg):
     """Creates a complete Plotly figure for a given qubit state."""
     fig = go.Figure()
@@ -113,7 +111,7 @@ def get_ai_explanation(state_data, last_action):
     
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
 
-    # --- NEW: Updated System Prompt ---
+    #System Prompt
     system_prompt = (
         "You are a quantum computing expert and an excellent educator. Your role is to explain the state of a qubit on the Bloch Sphere to a student. "
         "Be clear, concise, and use analogies where helpful. Start with a direct explanation of the current state and then connect it to the user's last action. "
@@ -126,15 +124,10 @@ def get_ai_explanation(state_data, last_action):
         "2.  **USE UNICODE:** You MUST use plain Unicode characters for all symbols (e.g., θ, φ, ψ, |0⟩, |+⟩, |−⟩, |+i⟩, |−i⟩).\n"
         "3.  **FOR EXPONENTS:** You MUST use the caret symbol (^). Example: Write 'cos(θ/2)^2', NOT 'cos²(θ/2)' or 'cos$^2$(θ/2)'.\n"
         "4.  **FOR FRACTIONS:** You MUST use the slash symbol (/). Example: Write '1/sqrt(2)', NOT '1/\\sqrt{2}' or '$\\frac{1}{\\sqrt{2}}$'.\n"
-        "5.  **FOR SQUARE ROOTS:** You MUST write 'sqrt(...)'. Example: '1/sqrt(2)'.\n"
-        "6.  **FOR TABLES:** You MUST use clean, simple Markdown pipe tables. Do not add complex formatting inside them. Example:\n"
-        "    | Outcome | Probability | Interpretation |\n"
-        "    | :--- | :--- | :--- |\n"
-        "    | P(|0⟩) | 50.0% | Explanation here. |\n"
-        "    | P(|1⟩) | 50.0% | Explanation here. |\n\n"
+        "5.  **FOR SQUARE ROOTS:** You MUST write 'sqrt(...)'. Example: '1/sqrt(2)'.\n\n"
         "This is not a suggestion. You must follow these formatting rules exactly, as the output is being rendered in a plain text environment that does not support LaTeX."
     )
-    # --- END NEW ---
+   
     
     # Extract data from the state_data dictionary
     theta_deg = state_data.get('theta', 0)
