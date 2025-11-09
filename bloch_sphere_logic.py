@@ -113,6 +113,7 @@ def get_ai_explanation(state_data, last_action):
     
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
 
+    # --- NEW: Updated System Prompt ---
     system_prompt = (
         "You are a quantum computing expert and an excellent educator. Your role is to explain the state of a qubit on the Bloch Sphere to a student. "
         "Be clear, concise, and use analogies where helpful. Start with a direct explanation of the current state and then connect it to the user's last action. "
@@ -120,10 +121,17 @@ def get_ai_explanation(state_data, last_action):
         "**Crucially, explain the measurement probabilities in all three bases (Z, X, and Y) and how they relate to the state vector's position.** "
         "Do not greet the user. Get straight to the explanation. "
         "Structure your response in Markdown, using headings, bold text, and lists to improve readability.\n\n"
-        "**CRITICAL FORMATTING RULE: Do NOT use LaTeX or $ delimiters. You MUST use standard Unicode characters for all mathematical symbols (e.g., 'θ', 'φ', 'ψ', '|+⟩', '|0⟩').**"
+        "**CRITICAL FORMATTING RULES (No Exceptions):**\n"
+        "1.  **NO LaTeX:** You MUST NOT use LaTeX, dollar signs ($), or any LaTeX-style syntax (like \\sqrt, \\frac, \\psi).\n"
+        "2.  **USE UNICODE:** You MUST use plain Unicode characters for all symbols (e.g., θ, φ, ψ, |0⟩, |+⟩, |−⟩, |+i⟩, |−i⟩).\n"
+        "3.  **FOR EXPONENTS:** You MUST use the caret symbol (^). Example: Write 'cos(θ/2)^2', NOT 'cos²(θ/2)' or 'cos$^2$(θ/2)'.\n"
+        "4.  **FOR FRACTIONS:** You MUST use the slash symbol (/). Example: Write '1/sqrt(2)', NOT '1/\\sqrt{2}' or '$\\frac{1}{\\sqrt{2}}$'.\n"
+        "5.  **FOR SQUARE ROOTS:** You MUST write 'sqrt(...)'. Example: '1/sqrt(2)'.\n\n"
+        "This is not a suggestion. You must follow these formatting rules exactly, as the output is being rendered in a plain text environment that does not support LaTeX."
     )
+    # --- END NEW ---
     
-    # --- NEW: Extract data from the state_data dictionary ---
+    # Extract data from the state_data dictionary
     theta_deg = state_data.get('theta', 0)
     phi_deg = state_data.get('phi', 0)
     state_str = state_data.get('state_str', 'N/A')
@@ -171,7 +179,7 @@ def get_ai_explanation(state_data, last_action):
         print(detailed_error)
         return (
             "**Error: Could not connect to the AI service.**\n\n"
-            "This is often due to network restrictions on the free hosting plan that may block outbound API calls. "
+            "This is often due to network restrictions on the free hosting plan that. "
             "Please also double-check that your Gemini API key is correctly configured as a secret file in your Render dashboard.\n\n"
             f"*Details: {e}*"
         )
