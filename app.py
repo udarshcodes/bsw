@@ -240,7 +240,7 @@ app.layout = html.Div(style={
         children=[
             "Made with ",  # Text prefix
             html.Span("❤️", style={'color': '#E31B23'}),  # Heart icon
-            " by VITIANs"  # Attribution
+            " by Udarsh Goyal"  # Attribution
         ],
         style={
             'textAlign': 'center',  # Center text
