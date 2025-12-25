@@ -33,7 +33,7 @@ The application is deployed on **Render** and accessible via the live demo link 
 ---
 
 ## 📌 Note
-> Comments have been added to every line of code, as required by my teacher.
+Comments have been added to every line of code, as required by my teacher.
 
 ---
 
