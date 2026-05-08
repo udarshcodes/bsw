@@ -277,7 +277,7 @@ def get_ai_explanation(state_data, last_action):
     # --- FIX: Ensure URL uses 'https://' scheme ---
     api_url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
+        f"gemini-2.0-flash:generateContent?key={api_key}"
     )
 
     # Updated System Prompt with extra rule for simple Markdown tables
