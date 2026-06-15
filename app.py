@@ -52,7 +52,7 @@ app.layout = html.Div(style={
 }, children=[
     
     # Hidden store to hold the current quantum state and probabilities between callbacks
-    dcc.Store(id='current-state-store'),
+    dcc.Store(id='current-state-store', data={'current_state': {'state': [0, 0, 1]}, 'probabilities': [1.0]}),
     
     # --- Top navigation / header bar ---
     html.Header(style={
