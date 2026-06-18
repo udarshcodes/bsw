@@ -1,0 +1,23 @@
+# API Keys and Secrets
+groq_key.txt
+.env
+secret.txt
+*.key
+
+# Python Virtual Environments
+venv/
+env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs and OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

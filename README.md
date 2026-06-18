@@ -1,41 +1,85 @@
-⚛️ **Interactive Bloch Sphere Visualizer**
+<div align="center">
+  <img src="assets/logo.png" alt="QuantumLens Logo" width="200" style="margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(139, 47, 240, 0.5));">
+  
+  # QuantumLens
+  **A stunning, interactive 3D Bloch Sphere visualizer to explore single-qubit quantum states in real-time.**
+</div>
 
-This is a web-based educational tool that provides a fully interactive 3D Bloch Sphere visualization. It is designed for students, teachers, and enthusiasts who want to explore and understand fundamental concepts of quantum computing and qubit states.
+## Live Demo
+[View Live Demo](https://udarshcodes-bloch-sphere-visualization.onrender.com/)
+*Note: Hosted on Render's free tier. The instance spins down after periods of inactivity, so it may take ~50 seconds to load initially.*
 
-## 🔗 Live Demo
-You can access the live application here: https://udarshcodes-bloch-sphere-visualization.onrender.com/
+## About
+QuantumLens is an educational web application designed to help students and enthusiasts explore fundamental concepts of quantum computing. Originally built as coursework, the tool allows users to manipulate a single qubit's state and observe the corresponding mathematical transformations in real-time. Featuring a brand new Apple-style glassmorphic design, it provides an intuitive bridge between abstract quantum mechanics and tangible visual representation.
 
----
+## Features
+- **Interactive 3D Manipulation**: Adjust theta and phi angles via sliders or numeric inputs to visually rotate the qubit state on the sphere.
+- **Quantum Gate Simulation**: Apply common single-qubit gates (X, Y, Z, H, S, T) to the current state and observe the vector's resulting movement.
+- **State Presets**: Jump instantly to standard quantum states like |0⟩, |+⟩, and |-⟩.
+- **Live Observables**: View real-time measurement probabilities across the Z, X, and Y bases alongside the updated state vector equation.
+- **AI Tutoring**: Generate context-aware theoretical explanations of the current state and measurement outcomes using the Groq API.
 
-## 🚀 Features
-- **Real-Time Visualization:** Manipulate the qubit state in 3D using sliders for the theta (`θ`) and phi (`φ`) angles.
-- **Numeric Input:** Enter a precise value for the phi (`φ`) angle using a text box.
-- **Quantum Gate Simulation:** Instantly apply common quantum gates (`X`, `Y`, `Z`, `H`, `S`, `T`) to the current state and observe the result.
-- **State Presets:** Jump directly to standard states such as `|0⟩`, `|+⟩`, and `|-⟩`.
-- **AI-Powered Explanations:** Click the **"Explain with AI"** button to generate a detailed theoretical breakdown of the current state using the Google Gemini API.
-- **Live Readouts:** View the state vector `|ψ⟩` and the measurement probabilities for `|0⟩` and `|1⟩` in real time.
-- **Measurement Insights:** Instantly see the probabilities of measuring `|0⟩` and `|1⟩`.
+## Tech Stack
+| Layer | Technology |
+| --- | --- |
+| Web Framework | Dash / Flask |
+| 3D Rendering | Plotly |
+| Quantum Engine | Qiskit |
+| External API | Groq API (LLaMA 3.1 & 3.3 Multi-Model) |
+| Hosting | Render / Gunicorn |
 
----
+## Architecture
+The application follows a standard client-server model utilizing Dash for reactive UI components and state management. The frontend captures user interactions (slider drags, gate button clicks) and dispatches them to a Python backend. The `bloch_sphere_logic.py` module processes these inputs, applies unitary matrices via Qiskit, and projects the resulting pure state into Cartesian coordinates. Plotly re-renders the 3D surface, while the UI dynamically updates measurement probabilities using Born rule projections. For pedagogical insights, the state parameters are sent through a sequential dual-model LLM chain (Groq Llama 3.1 for quick intuition, and Llama 3.3 for mathematical deep dives) to generate detailed, token-efficient Markdown explanations.
 
-## 🧠 Tech Stack
-- **Backend & Web App:** Dash (built on top of Flask)
-- **Visualization:** Plotly
-- **Quantum Logic:** Qiskit
-- **AI Explanations:** Google Gemini API
-- **Deployment:** Render
+## Running Locally
 
----
+1. Clone the repository and navigate into the directory:
+   ```bash
+   git clone https://github.com/udarshcodes/bsw.git
+   cd bsw
+   ```
 
-## ☁️ Deployment
-The application is deployed on **Render** and accessible via the live demo link above.
+2. Set up a Python virtual environment and activate it:
+   ```bash
+   python -m venv venv
+   # On macOS/Linux:
+   source venv/bin/activate  
+   # On Windows:
+   venv\Scripts\activate
+   ```
 
----
+3. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## 📌 Note
-Comments have been added to every line of code, as required by my teacher.
+4. Configure the AI service (Optional):
+   Create a file named `groq_key.txt` in the root directory of the project and paste your Groq API key inside it. Alternatively, set the `GROQ_API_KEY` environment variable. The app will automatically detect it.
 
----
+5. Run the application:
+   ```bash
+   python app.py
+   ```
 
-## ⭐ Support
-If you find this project useful or educational, please consider giving it a star!
+6. Open your browser and navigate to `http://localhost:8050`.
+
+## Project Structure
+```text
+.
+├── app.py                     # Main Dash application entry point and UI layout
+├── bloch_sphere_logic.py      # Core quantum state math, rendering, and API logic
+├── requirements.txt           # Python dependencies (Dash, Plotly, Qiskit, etc.)
+├── README.md                  # Project documentation
+└── assets/
+    └── custom.css             # UI styling overrides for sliders and buttons
+```
+
+## Key Technical Decisions
+- **Decoupling UI and Logic**: Separated the Dash reactive components (`app.py`) from the heavy mathematical lifting (`bloch_sphere_logic.py`) to keep the routing layer clean and modular.
+- **Handling Coordinate Singularities**: Implemented uniform random sampling on the spherical surface by assigning `cos(theta)` uniformly between [-1, 1] to prevent probability clustering at the poles during state generation.
+- **Numeric Stability Checks**: Added value clamping and domain bounding before trigonometric operations (e.g., `arccos(clip(z, -1, 1))`) to prevent application crashes from floating-point inaccuracies after successive gate operations.
+- **LLM Integration Shift**: Migrated from the Gemini API to Groq to leverage faster inference speeds, reducing UI blocking time during AI explanation requests.
+- **Framework Choice**: Opted for Dash and Plotly to rapidly iterate on complex 3D visualizations natively in Python without needing to build and maintain a separate React/Three.js frontend.
+
+## Author
+- **Udarsh Goyal** - [GitHub](https://github.com/udarshcodes)

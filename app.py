@@ -1,339 +1,330 @@
-# Import core Dash library for building web apps
-import dash  # Dash is a framework for building analytic web apps in Python
-from dash import dcc, html, Input, Output, State, callback_context  # Common Dash components and callback primitives
-import numpy as np  # Numerical computing (angles, complex numbers, etc.)
-import random  # Random numbers (for random Bloch states)
-import json  # JSON utilities (not directly used here but handy for debugging)
+"""
+Main application entry point for the QuantumLens visualizer.
 
-# Import functions that handle Bloch sphere plotting and quantum state logic
+This module sets up a Dash web application that provides a real-time, 3D interactive 
+visualization of a single-qubit quantum state. It coordinates user inputs (sliders, 
+buttons, inputs) with the underlying quantum state computations and renders the resulting
+Bloch sphere and probability distributions. 
+
+The architecture delegates state logic and rendering to `bloch_sphere_logic.py` to maintain 
+a clean separation of concerns between UI and business logic.
+"""
+
+import dash
+from dash import dcc, html, Input, Output, State, callback_context
+import numpy as np
+import random
+
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
-# Initialize the Dash app; by default Dash uses a Flask server under the hood
-# External stylesheet pulls Inter font for a modern UI look
-app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'])
-server = app.server  # Expose the underlying Flask server object (useful for deployment platforms)
+app = dash.Dash(__name__, external_stylesheets=['https://rsms.me/inter/inter.css'], title="QuantumLens", update_title=None, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1"}])
+server = app.server
 
-# Reusable button styling (kept in a dict to apply across many buttons)
-common_button_style = {
-    'backgroundColor': '#007AFF',  # iOS blue
-    'color': 'white',  # White text
-    'border': 'none',  # No border
-    'borderRadius': '12px',  # Rounded corners
-    'padding': '12px 18px',  # Comfortable padding
-    'fontSize': '15px',  # Readable size
-    'fontWeight': '600',  # Semi-bold
-    'cursor': 'pointer',  # Pointer cursor on hover
-    'transition': 'all 0.3s ease',  # Smooth hover/click transitions
-    'width': '100%',  # Full width in grid cells
-    'outline': 'none'  # Remove default focus outline (visual focus handled via CSS classes)
-}
-
-# Section header style used for panel headings
 section_header_style = {
-    'marginTop': '30px',  # Space before header
-    'marginBottom': '15px',  # Space after header
-    'borderBottom': '1px solid #333',  # Subtle divider line
-    'paddingBottom': '10px',  # Breathing room below text
-    'fontSize': '1.3rem',  # Larger font size
-    'fontWeight': '600'  # Semi-bold weight
+    'marginTop': '30px',
+    'marginBottom': '15px',
+    'borderBottom': '1px solid var(--bg-border)',
+    'paddingBottom': '10px',
+    'fontSize': '1.3rem',
+    'fontWeight': '600',
+    'color': 'var(--white)'
 }
 
-# Inline SVG for GitHub logo encoded as a data URI (so no external asset file is needed)
-github_logo_data_uri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='18' height='18' fill='white'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'%3E%3C/path%3E%3C/svg%3E"
+linkedin_logo_data_uri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18' fill='white'%3E%3Cpath d='M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z'/%3E%3C/svg%3E"
 
-
-# Define the overall page layout tree for the app
 app.layout = html.Div(style={
-    'backgroundColor': '#1D1D1F',  # Dark background
-    'color': '#F5F5F7',  # Light foreground text
-    'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',  # Font stack
-    'minHeight': '100vh',  # Full viewport height
-    'fontSize': '16px'  # Base font size
+    'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    'minHeight': '100vh',
+    'paddingBottom': '60px',
+    'fontSize': '16px',
+    'background': 'var(--bg)'
 }, children=[
-    
-    # Hidden store to hold the current quantum state and probabilities between callbacks
     dcc.Store(id='current-state-store'),
     
-    # --- Top navigation / header bar ---
-    html.Header(style={
-        'backgroundColor': '#333333',  # Header background
-        'borderBottom': '1px solid #333',  # Bottom border
-        'padding': '15px 40px',  # Spacing
-        'display': 'flex',  # Flex layout
-        'justifyContent': 'space-between',  # Space items apart
-        'alignItems': 'center'  # Vertically center contents
-    }, children=[
-        html.Div(
-            "INTERACTIVE BLOCH SPHERE",  # App title text
-            style={'fontSize': '22px', 'fontWeight': '600', 'color': '#007AFF'}  # Styled title
-        ),
-        html.A(
-            children=[
-                html.Img(src=github_logo_data_uri, style={'marginRight': '8px', 'verticalAlign': 'text-bottom'}),  # GitHub mark
-                " GITHUB"  # Link label
-            ],
-            href="https://github.com/udarshcodes/bsw",  # Repo link
-            target="_blank",  # Open in new tab
-            style={
-                'display': 'flex',  # Inline icon + text
-                'alignItems': 'center',
-                'fontSize': '14px',
-                'fontWeight': '500',
-                'color': 'white',
-                'textDecoration': 'none',
-                'padding': '8px 16px',  # Chip-like look
-                'borderRadius': '999px',  # Pill shape
-                'backgroundColor': '#333',
-                'border': '1px solid #555',
-                'transition': 'all 0.2s ease'  # Smooth hover
-            }
-        )
-    ]),
-    # END HEADER
-
-    # --- Main content area (left: plot, right: controls) ---
+    # Landing Page Container (100vh)
     html.Div(style={
-        'display': 'flex',  # Two columns
-        'flexDirection': 'row',
-        'flexWrap': 'wrap',  # Wrap on narrow screens
+        'minHeight': '100vh',
+        'display': 'flex',
+        'flexDirection': 'column',
         'justifyContent': 'center',
-        'gap': '40px',  # Space between columns
-        'padding': '40px 40px'  # Outer padding
+        'alignItems': 'center',
+        'position': 'relative',
+        'padding': '0 20px',
+        'backgroundImage': 'url("/assets/hero_bg.png")',
+        'backgroundSize': 'cover',
+        'backgroundPosition': 'center',
+        'borderBottom': '1px solid rgba(139, 47, 240, 0.2)'
     }, children=[
-        
-        # Left: Bloch sphere 3D plot
-        html.Div(
-            dcc.Graph(id='bloch-sphere-graph', figure=create_figure_for_state(0, 0)),  # Initial figure at |0> (theta=0, phi=0)
-            style={'flex': '1 1 700px', 'minWidth': '400px', 'maxWidth': '700px'}  # Responsive sizing
-        ),
-        
-        # Right: Control panel
+        # Dark overlay
         html.Div(style={
-            'flex': '1 1 500px',
-            'minWidth': '400px',
-            'maxWidth': '550px',
-            'padding': '25px',  # Inner padding
-            'border': '1px solid #333',  # Card border
-            'borderRadius': '18px',  # Rounded corners
-            'backgroundColor': '#2C2C2E',  # Card background
-            'boxShadow': '0 8px 32px rgba(0, 0, 0, 0.2)'  # Soft shadow
+            'position': 'absolute', 'top': 0, 'left': 0, 'right': 0, 'bottom': 0,
+            'backgroundColor': 'rgba(5, 5, 7, 0.80)', 'zIndex': 0
+        }),
+        # Navbar overlay
+        html.Nav(style={
+            'position': 'absolute', 'top': 0, 'left': 0, 'right': 0, 'zIndex': 2,
+            'padding': '25px 50px', 'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'
         }, children=[
-            
-            html.H2("State Controls", style={**section_header_style, 'marginTop': '0'}),  # Panel header
-            
-            # Theta control row: slider + numeric input
-            html.Label(html.B("Theta (θ) degrees")),  # Label for theta
-            html.Div(style={'display': 'flex', 'alignItems': 'center', 'gap': '15px'}, children=[
-                html.Div(
-                    dcc.Slider(id='theta-slider', min=0, max=180, step=1, value=0, marks={i: str(i) for i in range(0, 181, 45)}),  # θ slider
-                    style={'flex': '1'}  # Take remaining width
-                ),
-                dcc.Input(id='theta-input', type='number', placeholder='θ', min=0, max=180, step=1, value=0, style={
-                    'width': '70px', 'textAlign': 'center', 'background': '#333333', 
-                    'color': 'white', 'border': '1px solid #555', 'borderRadius': '8px' 
-                })  # Numeric input for θ (kept in sync with slider)
-            ]),
-            
-            # Phi control row: slider + numeric input
-            html.Div([
-                html.Label(html.B("Phi (φ) degrees"), style={'marginTop': '20px', 'display': 'block'}),  # Label for φ
-                html.Div(style={'display': 'flex', 'alignItems': 'center', 'gap': '15px'}, children=[
-                    html.Div(
-                        dcc.Slider(id='phi-slider', min=0, max=360, step=1, value=0, marks={i: str(i) for i in range(0, 361, 90)}),  # φ slider
-                        style={'flex': '1'}
-                    ),
-                    dcc.Input(id='phi-input', type='number', placeholder='φ', min=0, max=360, step=1, value=0, style={
-                        'width': '70px', 'textAlign': 'center', 'background': '#333333', 
-                        'color': 'white', 'border': '1px solid #555', 'borderRadius': '8px'
-                    })  # Numeric input for φ
-                ])
-            ]),
-            
-            # Quantum gate buttons grid
-            html.H2("Quantum Gates", style=section_header_style),  # Section header
-            html.Div(style={'display': 'grid', 'gridTemplateColumns': 'repeat(3, 1fr)', 'gap': '10px'}, children=[
-                html.Button('X Gate', id='gate-x', n_clicks=0, style=common_button_style),  # Pauli-X
-                html.Button('Y Gate', id='gate-y', n_clicks=0, style=common_button_style),  # Pauli-Y
-                html.Button('Z Gate', id='gate-z', n_clicks=0, style=common_button_style),  # Pauli-Z
-                html.Button('H Gate', id='gate-h', n_clicks=0, style=common_button_style),  # Hadamard
-                html.Button('S Gate', id='gate-s', n_clicks=0, style=common_button_style),  # Phase (S)
-                html.Button('T Gate', id='gate-t', n_clicks=0, style=common_button_style),  # T (π/8) gate
-            ]),
-            
-            # Preset state buttons
-            html.H2("Presets", style=section_header_style),  # Section header
-            html.Div(style={'display': 'grid', 'gridTemplateColumns': 'repeat(2, 1fr)', 'gap': '10px'}, children=[
-                html.Button('Reset to |0⟩', id='reset-button', n_clicks=0, style=common_button_style),  # |0> state
-                html.Button('Set to |+⟩', id='plus-button', n_clicks=0, style=common_button_style),  # |+> state
-                html.Button('Set to |-⟩', id='minus-button', n_clicks=0, style=common_button_style),  # |-> state
-                html.Button('Random State', id='random-button', n_clicks=0, style=common_button_style),  # Random Bloch state
-            ]),
-            
-            # Live readout of state vector and probabilities
-            html.H2("Live Readouts", style=section_header_style),  # Section header
-            html.Div(id='state-vector-readout', style={
-                'fontSize': '1.2em',  # Slightly larger text
-                'fontFamily': 'monospace', 'padding': '15px',  # Code-like font
-                'backgroundColor': '#333333', 'borderRadius': '12px', 'color': '#87CEEB'  # Styled card
-            }),
-            
-            html.Div(id='probability-display-area', style={'marginTop': '20px'}),  # Container for probability cards
-        ])
-    ]),
-    
-    # --- AI explanation area (uses LLM to describe current state) ---
-    html.Div(style={
-        'padding': '0 40px',  # Horizontal padding
-        'maxWidth': '1200px',  # Max content width
-        'margin': '20px auto 0 auto'  # Center the container
-    }, children=[
-        html.Div(style={
-            'padding': '25px',  # Card padding
-            'border': '1px solid #333',  # Border
-            'borderRadius': '18px',  # Rounded corners
-            'backgroundColor': '#2C2C2E',  # Card background
-            'boxShadow': '0 8px 32px rgba(0, 0, 0, 0.2)'  # Shadow
-        }, children=[
-            html.H2("AI Explanation", style={**section_header_style, 'marginTop': '0'}),  # Section header
-            html.Button("Explain with AI", id="ai-explain-button", n_clicks=0, style={
-                **common_button_style,  # Base style
-                'backgroundColor': '#34C759',  # Green call-to-action
-                'fontWeight': '600',
-                'maxWidth': '400px',  # Centered button width
-                'margin': '0 auto',  # Center horizontally
-                'display': 'block'  # Block-level for centering
-            }),
-            html.Div(
-                dcc.Loading(  # Spinner while explanation is generated
-                    id="loading-spinner",
-                    type="default",
-                    children=html.Div(
-                        id="ai-explanation-output",  # Placeholder for AI markdown
-                        style={
-                            'maxHeight': '400px',  # Scroll if too long
-                            'overflowY': 'auto', 
-                            'textAlign': 'left',
-                            'paddingRight': '10px',
-                            'marginTop': '20px',
-                            'lineHeight': '1.6'
-                        }
-                    ),
-                    color="#007AFF",  # Spinner color
-                    style={'marginTop': '15px'}  # Spacing above spinner
-                ),
+            html.Div("QuantumLens", style={'fontWeight': '800', 'fontSize': '1.3rem', 'letterSpacing': '-0.5px', 'color': 'var(--white)'}),
+            html.A(
+                children=[
+                    html.Img(src=linkedin_logo_data_uri, style={'marginRight': '8px', 'verticalAlign': 'text-bottom'}),
+                    " About the Developer"
+                ],
+                href="https://www.linkedin.com/in/udarsh-goyal-256095383/",
+                target="_blank",
+                className="glass-button",
                 style={
-                    'marginTop': '15px', 
-                    'padding': '20px',
-                    'border': '1px solid #333', 
-                    'borderRadius': '12px', 
-                    'minHeight': '50px', 
-                    'backgroundColor': '#333333',
-                    'overflowWrap': 'break-word',  # Wrap long tokens
+                    'width': 'auto', 
+                    'padding': '8px 20px', 
+                    'borderRadius': '999px', 
+                    'fontSize': '14px', 
+                    'textDecoration': 'none',
+                    'display': 'flex',
+                    'alignItems': 'center',
+                    'backgroundColor': 'rgba(255,255,255,0.05)'
                 }
             )
-        ])
+        ]),
+        
+        # Hero Content
+        html.Div([
+            html.Img(src="/assets/logo.png", className="hero-logo", style={
+                'display': 'block',
+                'margin': '0 auto 20px auto', 
+                'mixBlendMode': 'screen',
+                'animation': 'float 6s ease-in-out infinite'
+            }),
+            html.H1("QuantumLens", className="gradient-text hero-title", style={'display': 'block', 'margin': '0 auto 15px auto', 'fontWeight': '800', 'letterSpacing': '-1.5px'}),
+            html.P("A stunning, interactive 3D Bloch Sphere visualizer to explore single-qubit quantum states in real-time.", 
+                   className="hero-subtitle",
+                   style={'color': 'var(--white)', 'margin': '0 auto 40px auto', 'lineHeight': '1.6', 'fontWeight': '400', 'textShadow': '0 2px 10px rgba(0,0,0,0.8)'}),
+            html.A("Start Exploring", href="#app-container", className="glass-button primary-gradient-bg hero-btn", 
+                   style={'textDecoration': 'none', 'display': 'inline-block', 'fontWeight': '600', 'boxShadow': '0 10px 20px rgba(139, 47, 240, 0.3)'})
+        ], style={'position': 'relative', 'zIndex': 1, 'textAlign': 'center', 'animation': 'fadeInUp 1s ease-out', 'padding': '0 15px'})
     ]),
-    # END AI SECTION
-
-    # --- Footer with credit ---
-    html.Footer(
-        children=[
-            "Made with ",  # Text prefix
-            html.Span("❤️", style={'color': '#E31B23'}),  # Heart icon
-            " by Udarsh Goyal"  # Attribution
-        ],
-        style={
-            'textAlign': 'center',  # Center text
-            'marginTop': '40px',
-            'paddingBottom': '30px',  # Bottom padding
-            'paddingTop': '30px',  # Top padding
-            'borderTop': '1px solid #333',  # Divider
-            'color': '#007AFF',  # Accent color
-            'fontSize': '18px'  # Slightly larger text
-        }
-    )
     
-
+    # Main App Container
+    html.Div(id="app-container", style={'paddingTop': '80px', 'background': 'radial-gradient(circle at 50% -20%, rgba(139, 47, 240, 0.12), transparent 60%)'}, children=[
+        
+        # Main Application Area
+        html.Div(className="app-wrapper", children=[
+            
+            # Left: Bloch Sphere Plot
+            html.Div(
+                className="bloch-container",
+                children=[dcc.Graph(id='bloch-sphere-graph', figure=create_figure_for_state(0, 0), config={'displayModeBar': False})]
+            ),
+            
+            # Right: Controls Panel
+            html.Div(className="glass-panel controls-container", children=[
+                
+                html.H2("State Controls", style={**section_header_style, 'marginTop': '0'}),
+                
+                html.Label(html.B("Theta (θ) degrees"), style={'color': 'var(--text-muted)'}),
+                html.Div(className="slider-input-group", children=[
+                    html.Div(
+                        dcc.Slider(id='theta-slider', min=0, max=180, step=1, value=0, marks={i: str(i) for i in range(0, 181, 45)}),
+                        style={'flex': '1'}
+                    ),
+                    dcc.Input(id='theta-input', type='number', placeholder='θ', min=0, max=180, step=1, value=0, className="num-input")
+                ]),
+                
+                html.Div([
+                    html.Label(html.B("Phi (φ) degrees"), style={'marginTop': '25px', 'display': 'block', 'color': 'var(--text-muted)'}),
+                    html.Div(className="slider-input-group", children=[
+                        html.Div(
+                            dcc.Slider(id='phi-slider', min=0, max=360, step=1, value=0, marks={i: str(i) for i in range(0, 361, 90)}),
+                            style={'flex': '1'}
+                        ),
+                        dcc.Input(id='phi-input', type='number', placeholder='φ', min=0, max=360, step=1, value=0, className="num-input")
+                    ])
+                ]),
+                
+                html.H2("Quantum Gates", style=section_header_style),
+                html.Div(className='quantum-gates-grid', children=[
+                    html.Button('X Gate', id='gate-x', n_clicks=0, className="glass-button"),
+                    html.Button('Y Gate', id='gate-y', n_clicks=0, className="glass-button"),
+                    html.Button('Z Gate', id='gate-z', n_clicks=0, className="glass-button"),
+                    html.Button('H Gate', id='gate-h', n_clicks=0, className="glass-button"),
+                    html.Button('S Gate', id='gate-s', n_clicks=0, className="glass-button"),
+                    html.Button('T Gate', id='gate-t', n_clicks=0, className="glass-button"),
+                ]),
+                
+                html.H2("Presets", style=section_header_style),
+                html.Div(className='presets-grid', children=[
+                    html.Button('Reset to |0⟩', id='reset-button', n_clicks=0, className="glass-button"),
+                    html.Button('Set to |+⟩', id='plus-button', n_clicks=0, className="glass-button"),
+                    html.Button('Set to |-⟩', id='minus-button', n_clicks=0, className="glass-button"),
+                    html.Button('Random State', id='random-button', n_clicks=0, className="glass-button"),
+                ]),
+                
+                html.H2("Live Readouts", style=section_header_style),
+                html.Div(id='state-vector-readout', className="readout-box", style={
+                    'fontFamily': 'monospace',
+                    'backgroundColor': 'rgba(0,0,0,0.3)', 'color': 'var(--cyan)',
+                    'border': '1px solid var(--bg-border)'
+                }),
+                
+                html.Div(id='probability-display-area', style={'marginTop': '25px'}),
+            ])
+        ]),
+        
+        # AI Explanation Section
+        html.Div(className="ai-panel-wrapper", children=[
+            html.Div(className="glass-panel ai-panel-inner", children=[
+                html.H2("AI Insight Lens", style={**section_header_style, 'marginTop': '0'}),
+                html.Button("Analyze State with AI", id="ai-explain-button", n_clicks=0, className="glass-button primary-gradient-bg", style={
+                    'maxWidth': '400px',
+                    'margin': '0 auto',
+                    'display': 'block',
+                    'border': 'none',
+                    'padding': '16px 24px',
+                    'fontSize': '16px'
+                }),
+                html.Div(
+                    dcc.Loading(
+                        id="loading-spinner",
+                        type="default",
+                        children=html.Div(
+                            id="ai-explanation-output",
+                            style={
+                                'maxHeight': '500px',
+                                'overflowY': 'auto', 
+                                'textAlign': 'left',
+                                'paddingRight': '10px',
+                                'marginTop': '25px',
+                                'lineHeight': '1.7',
+                                'fontSize': '1.05rem',
+                                'color': 'rgba(255,255,255,0.85)'
+                            }
+                        ),
+                        color="var(--blue)",
+                        style={'marginTop': '20px'}
+                    ),
+                    style={
+                        'marginTop': '20px', 
+                        'padding': '25px',
+                        'border': '1px solid var(--bg-border)', 
+                        'borderRadius': '16px', 
+                        'minHeight': '50px', 
+                        'backgroundColor': 'rgba(0,0,0,0.2)',
+                        'overflowWrap': 'break-word',
+                    }
+                )
+            ])
+        ]),
+    
+        html.Footer(
+            children=[
+                "© 2026 Udarsh Goyal. All rights reserved."
+            ],
+            style={
+                'textAlign': 'center',
+                'marginTop': '60px',
+                'paddingTop': '30px',
+                'borderTop': '1px solid var(--bg-border)',
+                'color': 'var(--text-muted)',
+                'fontSize': '14px',
+                'fontWeight': '500'
+            }
+        )
+    ])
 ])
 
 
-# Primary callback: computes new state when controls/gates/presets change and returns UI updates
 @app.callback(
-    Output('bloch-sphere-graph', 'figure'),  # Updated 3D figure
-    Output('theta-slider', 'value'),         # Sync θ slider
-    Output('phi-slider', 'value'),           # Sync φ slider
-    Output('theta-input', 'value'),          # Sync θ number input
-    Output('phi-input', 'value'),            # Sync φ number input
-    Output('current-state-store', 'data'),   # Persist computed state + probabilities
-    Input('theta-slider', 'value'),          # θ slider input
-    Input('phi-slider', 'value'),            # φ slider input
-    Input('theta-input', 'value'),           # θ input box
-    Input('phi-input', 'value'),             # φ input box
-    Input('gate-x', 'n_clicks'), Input('gate-y', 'n_clicks'),  # Gate clicks
+    Output('bloch-sphere-graph', 'figure'),
+    Output('theta-slider', 'value'),
+    Output('phi-slider', 'value'),
+    Output('theta-input', 'value'),
+    Output('phi-input', 'value'),
+    Output('current-state-store', 'data'),
+    Input('theta-slider', 'value'),
+    Input('phi-slider', 'value'),
+    Input('theta-input', 'value'),
+    Input('phi-input', 'value'),
+    Input('gate-x', 'n_clicks'), Input('gate-y', 'n_clicks'),
     Input('gate-z', 'n_clicks'), Input('gate-h', 'n_clicks'),
     Input('gate-s', 'n_clicks'), Input('gate-t', 'n_clicks'),
     Input('reset-button', 'n_clicks'), Input('plus-button', 'n_clicks'),
     Input('minus-button', 'n_clicks'), Input('random-button', 'n_clicks'),
 )
 def update_sphere_and_readouts(
-    theta_from_slider, phi_from_slider, 
-    theta_from_input, phi_from_input,  
-    n_x, n_y, n_z, n_h, n_s, n_t,
-    n_reset, n_plus, n_minus, n_random
-):
-    ctx = callback_context  # Access info about what triggered this callback
-    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'initial_load'  # Element id
+    theta_from_slider: float, phi_from_slider: float, 
+    theta_from_input: float, phi_from_input: float,  
+    n_x: int, n_y: int, n_z: int, n_h: int, n_s: int, n_t: int,
+    n_reset: int, n_plus: int, n_minus: int, n_random: int
+) -> tuple:
+    """
+    Core state reconciliation and projection loop.
     
-    # Reconcile θ: if the numeric input was the trigger, clamp and use it; otherwise keep slider value
+    Synchronizes UI input states (sliders vs numerical inputs) and applies discrete 
+    quantum transformations before mapping the continuous amplitudes to observable probabilities.
+    
+    Args:
+        theta_from_slider (float): Polar angle from slider input.
+        phi_from_slider (float): Azimuthal angle from slider input.
+        theta_from_input (float): Polar angle from exact numeric input.
+        phi_from_input (float): Azimuthal angle from exact numeric input.
+        n_x, n_y, n_z, n_h, n_s, n_t (int): Click counters for Pauli and phase gates.
+        n_reset, n_plus, n_minus, n_random (int): Click counters for basis presets.
+        
+    Returns:
+        tuple: Formatted as (figure, theta, phi, theta_input, phi_input, store_data) reflecting 
+               the newly evaluated quantum state representation.
+    """
+    ctx = callback_context
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'initial_load'
+    
     if triggered_id == 'theta-input':
-        if theta_from_input is None:
-            new_theta = theta_from_slider  # Fallback to slider if input is empty
-        else:
-            new_theta = max(0, min(180, theta_from_input))  # Clamp to [0, 180]
+        new_theta = theta_from_slider if theta_from_input is None else max(0, min(180, theta_from_input))
     else:
-        new_theta = theta_from_slider  # No change; use slider
+        new_theta = theta_from_slider
     
-    # Reconcile φ similarly
     if triggered_id == 'phi-input':
-        if phi_from_input is None:
-            new_phi = phi_from_slider  # Fallback to slider
-        else:
-            new_phi = max(0, min(360, phi_from_input))  # Clamp to [0, 360]
+        new_phi = phi_from_slider if phi_from_input is None else max(0, min(360, phi_from_input))
     else:
-        new_phi = phi_from_slider  # Keep slider value
+        new_phi = phi_from_slider
 
-    # Map button ids to gate labels understood by apply_gate_to_state
     gate_map = {'gate-x':'X', 'gate-y':'Y', 'gate-z':'Z', 'gate-h':'H', 'gate-s':'S', 'gate-t':'T'}
 
-    # If a gate button or preset was clicked, update (θ, φ) accordingly
+    # Process discrete operations. Applying a gate transitions the state vector deterministically.
+    # The uniform random assignment samples cos(theta) uniformly on [-1, 1] to ensure an unbiased 
+    # distribution over the spherical surface, avoiding coordinate singularity clustering at the poles.
     if triggered_id in gate_map:
-        new_theta, new_phi = apply_gate_to_state(new_theta, new_phi, gate_map[triggered_id])  # Apply gate
-    elif triggered_id == 'reset-button': new_theta, new_phi = 0, 0  # |0⟩
-    elif triggered_id == 'plus-button': new_theta, new_phi = 90, 0  # |+⟩
-    elif triggered_id == 'minus-button': new_theta, new_phi = 90, 180  # |-⟩
+        new_theta, new_phi = apply_gate_to_state(new_theta, new_phi, gate_map[triggered_id])
+    elif triggered_id == 'reset-button': 
+        new_theta, new_phi = 0, 0
+    elif triggered_id == 'plus-button': 
+        new_theta, new_phi = 90, 0
+    elif triggered_id == 'minus-button': 
+        new_theta, new_phi = 90, 180
     elif triggered_id == 'random-button':
-        new_theta = np.rad2deg(np.arccos(2 * random.random() - 1))  # Uniform on sphere for cosθ
-        new_phi = 360 * random.random()  # Uniform φ in [0, 360)
+        new_theta = np.rad2deg(np.arccos(2 * random.random() - 1))
+        new_phi = 360 * random.random()
     
-    updated_figure = create_figure_for_state(new_theta, new_phi)  # Redraw Bloch sphere with new state
+    updated_figure = create_figure_for_state(new_theta, new_phi)
     
-    # Convert angles to radians for amplitude calculations
     theta_rad, phi_rad = np.deg2rad(new_theta), np.deg2rad(new_phi)
-    alpha = np.cos(theta_rad / 2)  # Amplitude for |0⟩
-    beta = np.exp(1j * phi_rad) * np.sin(theta_rad / 2)  # Amplitude for |1⟩ with phase φ
     
-    # Pretty-printed state string (complex components shown as a+bi)
+    # State parameterization utilizing standard convention:
+    # |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩.
+    # Phase factors only apply to |1⟩ component to factor out global phase.
+    alpha = np.cos(theta_rad / 2)
+    beta = np.exp(1j * phi_rad) * np.sin(theta_rad / 2)
+    
     state_str = f"|ψ⟩ = {alpha.real:.2f}{alpha.imag:+.2f}j |0⟩ + ({beta.real:.2f}{beta.imag:+.2f}j) |1⟩"
     
-    # Basis measurement probabilities from amplitudes
-    p_z_0 = (np.abs(alpha)**2)  # P(|0⟩) in Z-basis
-    p_z_1 = (np.abs(beta)**2)   # P(|1⟩) in Z-basis
-    p_x_plus = 0.5 * (np.abs(alpha + beta)**2)  # P(|+⟩) in X-basis
-    p_x_minus = 0.5 * (np.abs(alpha - beta)**2)  # P(|−⟩) in X-basis
-    p_y_plus = 0.5 * (np.abs(alpha - 1j * beta)**2)  # P(|+i⟩) in Y-basis
-    p_y_minus = 0.5 * (np.abs(alpha + 1j * beta)**2)  # P(|−i⟩) in Y-basis
+    # Measurement probabilities evaluated as Born rule projections (Tr(ρ Π)).
+    # We resolve components against Pauli Z, X, and Y bases directly from pure state amplitudes.
+    p_z_0 = (np.abs(alpha)**2)
+    p_z_1 = (np.abs(beta)**2)
+    p_x_plus = 0.5 * (np.abs(alpha + beta)**2)
+    p_x_minus = 0.5 * (np.abs(alpha - beta)**2)
+    p_y_plus = 0.5 * (np.abs(alpha - 1j * beta)**2)
+    p_y_minus = 0.5 * (np.abs(alpha + 1j * beta)**2)
 
-    # Pack all computed info into the dcc.Store for use by other callbacks
     store_data = {
         'theta': new_theta,
         'phi': new_phi,
@@ -341,132 +332,129 @@ def update_sphere_and_readouts(
         'prob_z': [p_z_0, p_z_1],
         'prob_x': [p_x_plus, p_x_minus],
         'prob_y': [p_y_plus, p_y_minus],
-        'last_action': triggered_id  # So AI can mention what changed
+        'last_action': triggered_id
     }
     
-    # Return updates to all targets (order must match Outputs)
     return updated_figure, new_theta, new_phi, new_theta, new_phi, store_data
 
 
-# Secondary callback: renders the text readouts from the stored state
 @app.callback(
-    Output('state-vector-readout', 'children'),       # Human-readable state vector
-    Output('probability-display-area', 'children'),   # Cards showing probabilities
-    Input('current-state-store', 'data')              # Trigger when store changes
+    Output('state-vector-readout', 'children'),
+    Output('probability-display-area', 'children'),
+    Input('current-state-store', 'data')
 )
-def update_readouts(data):
+def update_readouts(data: dict) -> tuple:
+    """
+    Renders state probability matrices to the frontend layer.
+    
+    Args:
+        data (dict): The serialized quantum state metrics, evaluated in the main callback loop.
+                     
+    Returns:
+        tuple: Formatted HTML elements bridging numeric probabilities into UI cards.
+    """
+    def create_prob_card(basis_name, states):
+        return html.Div([
+            html.H4(basis_name, style={'textAlign': 'center', 'margin': '0 0 12px 0', 'color': 'var(--text-muted)', 'fontWeight': '600'}),
+            html.Div([
+                html.Div(f"P({states[0][0]})", style={'fontWeight': '500', 'fontSize': '14px', 'color': 'var(--white)'}),
+                html.Div(f"{states[0][1]:.1%}", style={'fontWeight': '700', 'fontSize': '1.3em', 'color': 'var(--cyan)'})
+            ], style={'textAlign': 'center'}),
+            html.Div([
+                html.Div(f"P({states[1][0]})", style={'fontWeight': '500', 'fontSize': '14px', 'color': 'var(--white)'}),
+                html.Div(f"{states[1][1]:.1%}", style={'fontWeight': '700', 'fontSize': '1.3em', 'color': 'var(--cyan)'})
+            ], style={'textAlign': 'center', 'marginTop': '12px'}),
+        ], style={
+            'flex': '1', 'minWidth': '110px', 'padding': '20px',
+            'backgroundColor': 'rgba(0,0,0,0.2)', 'borderRadius': '16px',
+            'border': '1px solid var(--bg-border)'
+        })
+
     if not data:
-        # Default contents on first load (|0⟩ state)
         state_html = "|ψ⟩ = 1.00+0.00j |0⟩ + (0.00+0.00j) |1⟩"
-        prob_cards = []  # Will hold three basis cards
+        prob_cards = []
         for basis, states in [
             ('Z-Basis', [('|0⟩', 1.0), ('|1⟩', 0.0)]),
             ('X-Basis', [('|+⟩', 0.5), ('|−⟩', 0.5)]),
             ('Y-Basis', [('|+i⟩', 0.5), ('|−i⟩', 0.5)]),
         ]:
-            prob_cards.append(
-                html.Div([
-                    html.H4(basis, style={'textAlign': 'center', 'margin': '0 0 10px 0', 'color': '#aaa', 'fontWeight': '500'}),
-                    html.Div([
-                        html.Div(f"P({states[0][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
-                        html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
-                    ], style={'textAlign': 'center'}),
-                    html.Div([
-                        html.Div(f"P({states[1][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
-                        html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
-                    ], style={'textAlign': 'center', 'marginTop': '10px'}),
-                ], style={
-                    'flex': '1', 'minWidth': '110px', 'padding': '15px',
-                    'backgroundColor': '#333333', 'borderRadius': '12px'
-                })
-            )
+            prob_cards.append(create_prob_card(basis, states))
+            
         prob_html = [
-            html.B("Measurement Probabilities:", style={'fontSize': '1.1em'}),
-            html.Div(prob_cards, style={'display': 'flex', 'gap': '10px', 'marginTop': '10px', 'flexWrap': 'wrap'})
+            html.B("Measurement Probabilities", style={'fontSize': '1.1em', 'color': 'var(--white)'}),
+            html.Div(prob_cards, style={'display': 'flex', 'gap': '12px', 'marginTop': '15px', 'flexWrap': 'wrap'})
         ]
-        return state_html, prob_html  # Early return on initial load
+        return state_html, prob_html
 
-    # If we have state in the store, use it to populate the UI
-    state_html = data['state_str']  # Already formatted string
+    state_html = data['state_str']
     
-    # Build probability cards for each basis using stored probabilities
     prob_cards = []
     for basis, states in [
         ('Z-Basis', [('|0⟩', data['prob_z'][0]), ('|1⟩', data['prob_z'][1])]),
         ('X-Basis', [('|+⟩', data['prob_x'][0]), ('|−⟩', data['prob_x'][1])]),
         ('Y-Basis', [('|+i⟩', data['prob_y'][0]), ('|−i⟩', data['prob_y'][1])]),
     ]:
-        prob_cards.append(
-            html.Div([
-                html.H4(basis, style={'textAlign': 'center', 'margin': '0 0 10px 0', 'color': '#aaa', 'fontWeight': '500'}),
-                html.Div([
-                    html.Div(f"P({states[0][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
-                    html.Div(f"{states[0][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
-                ], style={'textAlign': 'center'}),
-                html.Div([
-                    html.Div(f"P({states[1][0]})", style={'fontWeight': '500', 'fontSize': '15px'}),
-                    html.Div(f"{states[1][1]:.1%}", style={'fontWeight': 'bold', 'fontSize': '1.2em'})
-                ], style={'textAlign': 'center', 'marginTop': '10px'}),
-            ], style={
-                'flex': '1', 'minWidth': '110px', 'padding': '15px',
-                'backgroundColor': '#333333', 'borderRadius': '12px'
-            })
-        )
+        prob_cards.append(create_prob_card(basis, states))
         
     prob_html = [
-        html.B("Measurement Probabilities:", style={'fontSize': '1.1em'}),
-        html.Div(prob_cards, style={'display': 'flex', 'gap': '10px', 'marginTop': '10px', 'flexWrap': 'wrap'})
+        html.B("Measurement Probabilities", style={'fontSize': '1.1em', 'color': 'var(--white)'}),
+        html.Div(prob_cards, style={'display': 'flex', 'gap': '12px', 'marginTop': '15px', 'flexWrap': 'wrap'})
     ]
 
-    return state_html, prob_html  # Updated readouts
+    return state_html, prob_html
 
 
-# Callback to generate an AI explanation for the current state when button is clicked
 @app.callback(
-    Output('ai-explanation-output', 'children'),  # Markdown text output
-    Input('ai-explain-button', 'n_clicks'),       # Trigger button
-    State('current-state-store', 'data'),         # Current state and metadata
-    prevent_initial_call=True                     # Do not run on initial page load
+    Output('ai-explanation-output', 'children'),
+    Input('ai-explain-button', 'n_clicks'),
+    State('current-state-store', 'data'),
+    prevent_initial_call=True
 )
-def update_ai_explanation(n_clicks, state_data):
+def update_ai_explanation(n_clicks: int, state_data: dict):
+    """
+    Asynchronous hook to interface with LLM agent for pedagogical analysis.
+    
+    Args:
+        n_clicks (int): Interaction counter, utilized to bypass initial render constraints.
+        state_data (dict): The serialized quantum state mapping needed for LLM context generation.
+        
+    Returns:
+        dcc.Markdown: Rendered output containing the dynamically generated explanation.
+    """
     if not state_data:
-        return dcc.Markdown("Please interact with the sphere first to generate a state.")  # Guard if no state
+        return dcc.Markdown("Please interact with the sphere first to generate a state.")
     
-    last_action = state_data.get('last_action', 'User requested explanation')  # What changed last
+    last_action = state_data.get('last_action', 'User requested explanation')
     if last_action == 'ai-explain-button':
-        last_action = "User requested an explanation of the current state."  # Make label more readable
+        last_action = "User requested an explanation of the current state."
 
-    explanation = get_ai_explanation(state_data, last_action)  # Delegate to logic helper
+    explanation = get_ai_explanation(state_data, last_action)
     
-    return dcc.Markdown(explanation, link_target="_blank")  # Render markdown (allow links to open in new tab)
+    return dcc.Markdown(explanation, link_target="_blank")
 
 
-# Client-side callback to add a quick click animation class to pressed buttons (no server roundtrip)
 app.clientside_callback(
     """
-    function(n_x, n_y, n_z, n_h, n_s, n_t, n_reset, n_plus, n_minus, n_random) {
-        // Determine which input fired this clientside callback
+    function(n_x, n_y, n_z, n_h, n_s, n_t, n_reset, n_plus, n_minus, n_random, ai_btn) {
         const triggered = dash_clientside.callback_context.triggered[0];
         if (!triggered) {
-            return; // No button was triggered
+            return;
         }
         
-        const buttonId = triggered.prop_id.split('.')[0];  // Extract component id
-        const element = document.getElementById(buttonId);  // Get the DOM element
+        const buttonId = triggered.prop_id.split('.')[0];
+        const element = document.getElementById(buttonId);
         
         if (element) {
-            // Add the CSS class that defines the animation
             element.classList.add('button-clicked');
             
-            // Remove the class shortly after so it can be re-applied on the next click
             setTimeout(() => {
                 element.classList.remove('button-clicked');
-            }, 150); // Duration matches CSS transition for a crisp tap effect
+            }, 150);
         }
-        return dash_clientside.no_update; // Do not modify any outputs; purely visual side-effect
+        return dash_clientside.no_update;
     }
     """,
-    Output('current-state-store', 'data', allow_duplicate=True),  # Dummy output to satisfy Dash API
+    Output('current-state-store', 'data', allow_duplicate=True),
     Input('gate-x', 'n_clicks'),
     Input('gate-y', 'n_clicks'),
     Input('gate-z', 'n_clicks'),
@@ -477,10 +465,10 @@ app.clientside_callback(
     Input('plus-button', 'n_clicks'),
     Input('minus-button', 'n_clicks'),
     Input('random-button', 'n_clicks'),
-    prevent_initial_call=True  # Only run after user interaction
+    Input('ai-explain-button', 'n_clicks'),
+    prevent_initial_call=True
 )
 
 
-# Run the development server when executing this script directly
 if __name__ == '__main__':
-    app.run(debug=True)  # Enable hot reloading and debug info for local development
+    app.run(debug=True)
