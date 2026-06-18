@@ -80,6 +80,3 @@ The application follows a standard client-server model utilizing Dash for reacti
 - **Numeric Stability Checks**: Added value clamping and domain bounding before trigonometric operations (e.g., `arccos(clip(z, -1, 1))`) to prevent application crashes from floating-point inaccuracies after successive gate operations.
 - **LLM Integration Shift**: Migrated from the Gemini API to Groq to leverage faster inference speeds, reducing UI blocking time during AI explanation requests.
 - **Framework Choice**: Opted for Dash and Plotly to rapidly iterate on complex 3D visualizations natively in Python without needing to build and maintain a separate React/Three.js frontend.
-
-## Author
-- **Udarsh Goyal** - [GitHub](https://github.com/udarshcodes)
