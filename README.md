@@ -70,8 +70,13 @@ The application follows a standard client-server model utilizing Dash for reacti
 ├── bloch_sphere_logic.py      # Core quantum state math, rendering, and API logic
 ├── requirements.txt           # Python dependencies (Dash, Plotly, Qiskit, etc.)
 ├── README.md                  # Project documentation
+├── LICENSE                    # Project license file
 └── assets/
-    └── custom.css             # UI styling overrides for sliders and buttons
+    ├── custom.css             # UI styling overrides for sliders and buttons
+    ├── responsive.css         # Mobile and tablet responsiveness styles
+    ├── hero_bg.png            # Background image for the landing section
+    ├── logo.png               # QuantumLens application logo
+    └── favicon.ico            # Site favicon
 ```
 
 ## Key Technical Decisions

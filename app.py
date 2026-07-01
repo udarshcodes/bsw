@@ -30,8 +30,6 @@ section_header_style = {
     'color': 'var(--white)'
 }
 
-linkedin_logo_data_uri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18' fill='white'%3E%3Cpath d='M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z'/%3E%3C/svg%3E"
-
 app.layout = html.Div(style={
     'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     'minHeight': '100vh',
@@ -65,26 +63,7 @@ app.layout = html.Div(style={
             'position': 'absolute', 'top': 0, 'left': 0, 'right': 0, 'zIndex': 2,
             'padding': '25px 50px', 'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'
         }, children=[
-            html.Div("QuantumLens", style={'fontWeight': '800', 'fontSize': '1.3rem', 'letterSpacing': '-0.5px', 'color': 'var(--white)'}),
-            html.A(
-                children=[
-                    html.Img(src=linkedin_logo_data_uri, style={'marginRight': '8px', 'verticalAlign': 'text-bottom'}),
-                    " About the Developer"
-                ],
-                href="https://www.linkedin.com/in/udarsh-goyal-256095383/",
-                target="_blank",
-                className="glass-button",
-                style={
-                    'width': 'auto', 
-                    'padding': '8px 20px', 
-                    'borderRadius': '999px', 
-                    'fontSize': '14px', 
-                    'textDecoration': 'none',
-                    'display': 'flex',
-                    'alignItems': 'center',
-                    'backgroundColor': 'rgba(255,255,255,0.05)'
-                }
-            )
+            html.Div("QuantumLens", style={'fontWeight': '800', 'fontSize': '1.3rem', 'letterSpacing': '-0.5px', 'color': 'var(--white)'})
         ]),
         
         # Hero Content
@@ -101,7 +80,17 @@ app.layout = html.Div(style={
                    style={'color': 'var(--white)', 'margin': '0 auto 40px auto', 'lineHeight': '1.6', 'fontWeight': '400', 'textShadow': '0 2px 10px rgba(0,0,0,0.8)'}),
             html.A("Start Exploring", href="#app-container", className="glass-button primary-gradient-bg hero-btn", 
                    style={'textDecoration': 'none', 'display': 'inline-block', 'fontWeight': '600', 'boxShadow': '0 10px 20px rgba(139, 47, 240, 0.3)'})
-        ], style={'position': 'relative', 'zIndex': 1, 'textAlign': 'center', 'animation': 'fadeInUp 1s ease-out', 'padding': '0 15px'})
+        ], style={'position': 'relative', 'zIndex': 1, 'textAlign': 'center', 'animation': 'fadeInUp 1s ease-out', 'padding': '0 15px'}),
+        
+        # Scroll Indicator
+        html.A(
+            href="#app-container",
+            className="scroll-indicator",
+            children=[
+                "SCROLL BELOW",
+                html.Div("↓", style={'fontSize': '18px', 'marginTop': '4px'})
+            ]
+        )
     ]),
     
     # Main App Container
@@ -217,7 +206,22 @@ app.layout = html.Div(style={
     
         html.Footer(
             children=[
-                "© 2026 Udarsh Goyal. All rights reserved."
+                html.Div("© 2026 Udarsh Goyal. All rights reserved."),
+                html.Div(
+                    html.A(
+                        "About the Developer",
+                        href="https://www.linkedin.com/in/udarsh-goyal-256095383/",
+                        target="_blank",
+                        style={
+                            'color': 'var(--text-muted)', 
+                            'textDecoration': 'underline',
+                            'fontSize': '13px',
+                            'marginTop': '8px',
+                            'display': 'inline-block',
+                            'opacity': '0.8'
+                        }
+                    )
+                )
             ],
             style={
                 'textAlign': 'center',
