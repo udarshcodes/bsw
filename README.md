@@ -6,7 +6,7 @@
 </div>
 
 ## Live Demo
-[View Live Demo](https://udarshcodes-bloch-sphere-visualization.onrender.com/)
+[View Live Demo](https://quantumlens.onrender.com/)
 *Note: Hosted on Render's free tier. The instance spins down after periods of inactivity, so it may take ~50 seconds to load initially.*
 
 ## About
