@@ -13,7 +13,7 @@ a clean separation of concerns between UI and business logic.
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import numpy as np
-import random
+import secrets
 
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
@@ -68,16 +68,27 @@ app.layout = html.Div(style={
         
         # Hero Content
         html.Div([
-            html.Img(src="/assets/logo.png", className="hero-logo", style={
-                'display': 'block',
-                'margin': '0 auto 20px auto', 
-                'mixBlendMode': 'screen',
-                'animation': 'float 6s ease-in-out infinite'
-            }),
+html.Img(src="/assets/logo.png", className="hero-logo", style={
+    'display': 'block', 
+    'margin': '0 auto 20px', 
+    'mixBlendMode': 'screen', 
+    'animation': 'float 6s ease-in-out'
+}),
             html.H1("QuantumLens", className="gradient-text hero-title", style={'display': 'block', 'margin': '0 auto 15px auto', 'fontWeight': '800', 'letterSpacing': '-1.5px'}),
-            html.P("A stunning, interactive 3D Bloch Sphere visualizer to explore single-qubit quantum states in real-time.", 
-                   className="hero-subtitle",
-                   style={'color': 'var(--white)', 'margin': '0 auto 40px auto', 'lineHeight': '1.6', 'fontWeight': '400', 'textShadow': '0 2px 10px rgba(0,0,0,0.8)'}),
+html.P(
+    "A stunning, interactive 3D "
+    "Bloch Sphere visualizer to explore "
+    "single-qubit quantum states."
+    ,
+    className="hero-subtitle",
+    style={
+        'color': 'var(--white)', 
+        'margin': '0 auto 40px', 
+        'lineHeight': '1.6', 
+        'fontWeight': '400', 
+        'textShadow': '0 2px 10px rgba(0,0,0,0.8)'
+    }
+),
             html.A("Start Exploring", href="#app-container", className="glass-button primary-gradient-bg hero-btn", 
                    style={'textDecoration': 'none', 'display': 'inline-block', 'fontWeight': '600', 'boxShadow': '0 10px 20px rgba(139, 47, 240, 0.3)'})
         ], style={'position': 'relative', 'zIndex': 1, 'textAlign': 'center', 'animation': 'fadeInUp 1s ease-out', 'padding': '0 15px'}),
