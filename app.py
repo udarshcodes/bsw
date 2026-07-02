@@ -13,7 +13,7 @@ a clean separation of concerns between UI and business logic.
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import numpy as np
-import random
+import secrets
 
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
@@ -305,7 +305,7 @@ def update_sphere_and_readouts(
     elif triggered_id == 'minus-button': 
         new_theta, new_phi = 90, 180
     elif triggered_id == 'random-button':
-        new_theta = np.rad2deg(np.arccos(2 * random.random() - 1))
+        new_theta = np.rad2deg(np.arccos(2 * secrets.randbelow(1000000) / 1000000 - 1))
         new_phi = 360 * random.random()
     
     updated_figure = create_figure_for_state(new_theta, new_phi)
