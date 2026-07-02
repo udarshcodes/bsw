@@ -74,73 +74,10 @@ def state_to_bloch(state_vector: np.ndarray) -> tuple[float, float, float]:
     return x, y, z
 
 
-def apply_gate_to_state(theta_deg: float, phi_deg: float, gate_name: str) -> tuple[float, float]:
-    """
-    Update system quantum state via unitary gate evolution.
+pass
+pass
 
-    Transforms spherical parametrizations to an operator-agnostic matrix sequence, applies the
-    requested primitive via Qiskit's matrix synthesis engine, and recovers the subsequent angles.
-
-    Args:
-        theta_deg (float): Starting polar angle θ in degrees.
-        phi_deg (float): Starting azimuthal angle φ in degrees.
-        gate_name (str): The common identifier for the targeted unitary (e.g., 'X', 'H').
-
-    Returns:
-        tuple[float, float]: Synthesized (new_theta_deg, new_phi_deg) after applying the gate.
-    """
-    theta_rad = np.deg2rad(theta_deg)
-    phi_rad = np.deg2rad(phi_deg)
-    
-    current_state_vector = np.array([
-        np.cos(theta_rad / 2),
-        np.exp(1j * phi_rad) * np.sin(theta_rad / 2)
-    ])
-
-    gate_circuit = QuantumCircuit(1)
-    gate_map = {
-        'X': gate_circuit.x,
-        'Y': gate_circuit.y,
-        'Z': gate_circuit.z,
-        'H': gate_circuit.h,
-        'S': gate_circuit.s,
-        'T': gate_circuit.t,
-    }
-
-    if gate_name in gate_map:
-        gate_map[gate_name](0)
-        gate_operator = Operator(gate_circuit)
-        # Evolve state: |ψ'⟩ = U|ψ⟩
-        new_state_vector = gate_operator.data @ current_state_vector
-    else:
-        new_state_vector = current_state_vector
-
-    x, y, z = state_to_bloch(new_state_vector)
-    
-    # Bound Z mathematically into valid domain [-1, 1] prior to arccos to avoid floating point instability errors.
-    new_theta_rad = np.arccos(np.clip(z, -1, 1))
-    new_phi_rad = np.arctan2(y, x)
-
-    # Normalize bounded phase to [0, 360) ensuring rotation modularity.
-    return np.rad2deg(new_theta_rad), np.rad2deg(new_phi_rad % (2 * np.pi))
-
-
-def create_figure_for_state(theta_deg: float, phi_deg: float) -> go.Figure:
-    """
-    Construct a visual rendering topology for the Bloch sphere interface.
-
-    Synthesizes the topological mesh required to view the qubit state representation, 
-    mapping the requested rotational vector into an interactive Plotly scene.
-
-    Args:
-        theta_deg (float): Evaluated polar boundary angle θ.
-        phi_deg (float): Evaluated azimuthal boundary angle φ.
-
-    Returns:
-        go.Figure: Instantiated Plotly engine entity configured for UI display.
-    """
-    fig = go.Figure()
-
+def _create_bloch_sphere(fig: go.Figure) -> None:
     u, v = np.mgrid[0:2*np.pi:100j, 0:np.pi:100j]
     x_sphere = np.cos(u) * np.sin(v)
     y_sphere = np.sin(u) * np.sin(v)
@@ -181,6 +118,12 @@ def create_figure_for_state(theta_deg: float, phi_deg: float) -> go.Figure:
             )
         )
 
+def _add_axis_lines(fig: go.Figure) -> None:
+    fig.add_trace(go.Scatter3d(x=[0, 1.2], y=[0, 0], z=[0, 0], mode='lines', line=dict(color='red',   width=5), name='axis_x'))
+    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 1.2], z=[0, 0], mode='lines', line=dict(color='green', width=5), name='axis_y'))
+    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, 1.2], mode='lines', line=dict(color='blue',  width=5), name='axis_z'))
+
+def _add_state_vector(fig: go.Figure, theta_deg: float, phi_deg: float) -> None:
     theta_rad, phi_rad = np.deg2rad(theta_deg), np.deg2rad(phi_deg)
     x, y, z = get_bloch_vector_coordinates(theta_rad, phi_rad)
 
@@ -205,10 +148,7 @@ def create_figure_for_state(theta_deg: float, phi_deg: float) -> go.Figure:
         )
     )
 
-    fig.add_trace(go.Scatter3d(x=[0, 1.2], y=[0, 0], z=[0, 0], mode='lines', line=dict(color='red',   width=5), name='axis_x'))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 1.2], z=[0, 0], mode='lines', line=dict(color='green', width=5), name='axis_y'))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, 1.2], mode='lines', line=dict(color='blue',  width=5), name='axis_z'))
-
+def _add_labels(fig: go.Figure) -> None:
     fig.add_trace(go.Scatter3d(
         x=[0], y=[0], z=[1.05],
         mode='text',

@@ -13,7 +13,7 @@ a clean separation of concerns between UI and business logic.
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import numpy as np
-import random
+import secrets
 
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
