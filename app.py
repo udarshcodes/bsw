@@ -13,7 +13,7 @@ a clean separation of concerns between UI and business logic.
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import numpy as np
-import random
+import secrets
 
 from bloch_sphere_logic import create_figure_for_state, apply_gate_to_state, get_ai_explanation
 
@@ -272,7 +272,13 @@ def update_sphere_and_readouts(
         theta_from_input (float): Polar angle from exact numeric input.
         phi_from_input (float): Azimuthal angle from exact numeric input.
         n_x, n_y, n_z, n_h, n_s, n_t (int): Click counters for Pauli and phase gates.
-        n_reset, n_plus, n_minus, n_random (int): Click counters for basis presets.
+        n_reset, n_plus, n_minus, n_secrets 
+
+However, the above replacement will not work for all cases because secrets module does not have the same functions as the random module. For example, secrets.choice() is equivalent to random.choice(), but secrets does not have a direct equivalent for secrets.randbelow() or secrets.randbits(32) / 2**32
+
+Also, we need to add an import statement for the secrets module at the top of the file if it's not already there.().
+
+To fix this issue properly, we need to know the exact lines of code where the random module is being used. Assuming it's being used for generating random numbers, here's a more specific replacement:(int): Click counters for basis presets.
         
     Returns:
         tuple: Formatted as (figure, theta, phi, theta_input, phi_input, store_data) reflecting 
