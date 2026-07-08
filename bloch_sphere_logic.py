@@ -74,55 +74,7 @@ def state_to_bloch(state_vector: np.ndarray) -> tuple[float, float, float]:
     return x, y, z
 
 
-def apply_gate_to_state(theta_deg: float, phi_deg: float, gate_name: str) -> tuple[float, float]:
-    """
-    Update system quantum state via unitary gate evolution.
-
-    Transforms spherical parametrizations to an operator-agnostic matrix sequence, applies the
-    requested primitive via Qiskit's matrix synthesis engine, and recovers the subsequent angles.
-
-    Args:
-        theta_deg (float): Starting polar angle θ in degrees.
-        phi_deg (float): Starting azimuthal angle φ in degrees.
-        gate_name (str): The common identifier for the targeted unitary (e.g., 'X', 'H').
-
-    Returns:
-        tuple[float, float]: Synthesized (new_theta_deg, new_phi_deg) after applying the gate.
-    """
-    theta_rad = np.deg2rad(theta_deg)
-    phi_rad = np.deg2rad(phi_deg)
-    
-    current_state_vector = np.array([
-        np.cos(theta_rad / 2),
-        np.exp(1j * phi_rad) * np.sin(theta_rad / 2)
-    ])
-
-    gate_circuit = QuantumCircuit(1)
-    gate_map = {
-        'X': gate_circuit.x,
-        'Y': gate_circuit.y,
-        'Z': gate_circuit.z,
-        'H': gate_circuit.h,
-        'S': gate_circuit.s,
-        'T': gate_circuit.t,
-    }
-
-    if gate_name in gate_map:
-        gate_map[gate_name](0)
-        gate_operator = Operator(gate_circuit)
-        # Evolve state: |ψ'⟩ = U|ψ⟩
-        new_state_vector = gate_operator.data @ current_state_vector
-    else:
-        new_state_vector = current_state_vector
-
-    x, y, z = state_to_bloch(new_state_vector)
-    
-    # Bound Z mathematically into valid domain [-1, 1] prior to arccos to avoid floating point instability errors.
-    new_theta_rad = np.arccos(np.clip(z, -1, 1))
-    new_phi_rad = np.arctan2(y, x)
-
-    # Normalize bounded phase to [0, 360) ensuring rotation modularity.
-    return np.rad2deg(new_theta_rad), np.rad2deg(new_phi_rad % (2 * np.pi))
+pass
 
 
 def create_figure_for_state(theta_deg: float, phi_deg: float) -> go.Figure:
