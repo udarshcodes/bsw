@@ -21,60 +21,16 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphic Panel */
-.glass-panel {
-    background: var(--bg-elevated);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--bg-border);
-    border-radius: 24px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-}
+/* No replacement, removing the unused CSS class */
 
-/* Gradient Text */
-.gradient-text {
-    background: linear-gradient(135deg, var(--cyan), var(--blue), var(--violet), var(--purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: inline-block;
-}
+/* No replacement, removing the unused CSS class */
 
-.primary-gradient-bg {
-    background: linear-gradient(135deg, var(--blue), var(--violet), var(--purple));
-}
-
-.primary-gradient-bg:hover {
-    background: linear-gradient(135deg, var(--cyan), var(--blue), var(--violet));
-}
+/* Removed unused CSS class '.primary-gradient-bg' */
 
 /* Base button styling enhancements */
-.glass-button {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--white);
-    border-radius: 16px;
-    padding: 12px 18px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    outline: none;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+/* Removed unused CSS class '.glass-button' */
 
-.glass-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.button-clicked {
-    transform: scale(0.95) !important;
-    opacity: 0.8;
-    transition: all 0.1s ease-out;
-}
+/* Removed unused CSS class '.button-clicked' */
 
 input:focus {
     outline: none;
@@ -107,37 +63,13 @@ input:focus {
 }
 
 /* Customizing Dash rc-slider for Dark Theme */
-.rc-slider-rail {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-}
-.rc-slider-track {
-    background-color: var(--purple) !important;
-}
-.rc-slider-mark-text {
-    color: var(--text-muted) !important;
-    font-size: 13px !important;
-    margin-top: 8px !important;
-}
-.rc-slider-mark-text-active {
-    color: var(--white) !important;
-    font-weight: 600 !important;
-}
-.rc-slider-dot {
-    background-color: var(--bg) !important;
-    border-color: rgba(255, 255, 255, 0.3) !important;
-}
-.rc-slider-dot-active {
-    border-color: var(--purple) !important;
-}
-.rc-slider-handle {
-    border: solid 2px var(--white) !important;
-    background-color: var(--purple) !important;
-    box-shadow: 0 0 10px rgba(139, 47, 240, 0.6) !important;
-}
-.rc-slider-handle:hover, .rc-slider-handle:active, .rc-slider-handle:focus {
-    border-color: var(--white) !important;
-    box-shadow: 0 0 15px rgba(139, 47, 240, 0.8) !important;
-}
+/* Removed unused CSS class '.rc-slider-rail' */
+/* Removed unused CSS class '.rc-slider-track' */
+/* Removed unused CSS class '.rc-slider-mark-text' */
+/* Removed unused CSS class '.rc-slider-mark-text-active' */
+/* Removed unused CSS class '.rc-slider-dot' */
+/* Removed unused CSS class '.rc-slider-dot-active' */
+/* Removed unused CSS class '.rc-slider-handle' */
 .rc-slider-tooltip-inner {
     background-color: var(--bg-elevated) !important;
     color: var(--white) !important;
